@@ -32,7 +32,8 @@ if(process.argv.length < 3){
         console.log("wait completed, gathering data..."); 
     
         //class selector for div with child image element: 'c-viewer__comic'
-        // Set screen size
+
+        //gets links to blob object URLs.
         const issueSrcs = await page.evaluate(() => {
 
             const srcs = document.querySelectorAll(".c-viewer__comic");
@@ -49,7 +50,8 @@ if(process.argv.length < 3){
             
             return imglinks;
         });
-        //opens all the image links and writes them to png files. Not in a folder or anything so kinda messy, but it works.
+
+        //opens all the object URL links and writes the data to png files. Not in a folder or anything so kinda messy, but it works.
         for (let i = 0; i < issueSrcs.length; i++) {
             const viewSource = await page.goto(issueSrcs[i]);
             fs.writeFile(`image_${i + 1}.png`, await viewSource.buffer(), () => console.log(`Image #${i + 1} downloaded`));
