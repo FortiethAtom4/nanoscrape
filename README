@@ -1,0 +1,13 @@
+# HOW TO USE THIS SCRAPER
+
+1. Get a link to the nekomeru chapter (example: https://ciao.shogakukan.co.jp/comics/title/00511/episode/9255)
+
+2. Open this folder with any code-editing software. Visual Studio Code is a lightweight option if you do not have one already.
+    - link to download: https://code.visualstudio.com/Download
+
+2. Open a terminal and type the following into the command line: `node/node.exe nekomeruscrape.js [URL]`, where `[URL]` is the chapter URL.
+    - Note: if you have Node.js already installed on your computer, you can simply type `node nekomeruscrape.js [link]` to do the same thing.
+
+3. The scraper will get your images and write them to this folder in about 15 seconds or so. 
+
+# ENJOY
