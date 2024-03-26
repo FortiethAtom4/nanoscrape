@@ -14,4 +14,16 @@
 
 6. The scraper will get your images and write them to this folder in about 15 seconds or so. 
 
-# ENJOY
+# USAGE
+
+Command: `node nekomeruscrape.js [URL] [(optional) timeout]`
+
+The command waits after images selectors begin loading to attempt scraping. The minimum/default wait time is 5 seconds.
+You can change this value by adding a number (in seconds) to the end of the command. for example, the following will
+wait 7.5 seconds instead of 5 before scraping:
+
+`node nekomeruscrape.js [URL] 7.5`
+
+This is done to ensure all images have loaded before scraping begins. If your computer is slow or your internet
+connection is choppy, consider using a higher timeout time to compensate.
+

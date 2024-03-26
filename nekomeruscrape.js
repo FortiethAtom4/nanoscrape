@@ -5,8 +5,8 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-if(process.argv.length < 3){
-    console.log("Usage: node nekomeruscrape.js [link to chapter]");
+if(process.argv.length < 3 || process.argv.length > 4){
+    console.log("Usage: node nekomeruscrape.js [link to chapter] [(optional) timeout]");
     return
 }
 
@@ -24,18 +24,24 @@ if(process.argv.length < 3){
 
         console.log("page reached, waiting for class selector...");
         await page.waitForSelector('.c-viewer__comic');
-        console.log("image class selector detected, waiting 5 seconds for other images to load...")
-        //waits 5 seconds before beginning scraping. This is to allow the many images to load to the page, which typically takes a bit.
+
+        //waits a set amount of time before beginning scraping, default 5 seconds. This is to allow the many images to load to the page, which typically takes a bit.
         //This works in tandem with waitForSelector since there are multiple images with that class to wait for. Janky but it works fine enough.
-        
-        await sleep(5000);
+
+        if(process.argv[3] > 5){
+            console.log(`image class selector detected, waiting ${process.argv[3]} seconds for other images to load...`);
+            await sleep(process.argv[3]*1000);
+        }else{
+            console.log(`image class selector detected, waiting 5 seconds for other images to load...`);
+            await sleep(5000);
+        }
+
         console.log("wait completed, gathering data..."); 
     
         //class selector for div with child image element: 'c-viewer__comic'
 
         //gets links to blob object URLs.
         const issueSrcs = await page.evaluate(() => {
-
             const srcs = document.querySelectorAll(".c-viewer__comic");
             let imglinks = [];
             for(let i = 0; i < srcs.length; i++){
@@ -51,7 +57,7 @@ if(process.argv.length < 3){
             return imglinks;
         });
 
-        //opens all the object URL links and writes the data to png files. Not in a folder or anything so kinda messy, but it works.
+        //opens all the object URL links and writes the data to png files. Images are downloaded to this folder.
         for (let i = 0; i < issueSrcs.length; i++) {
             const viewSource = await page.goto(issueSrcs[i]);
             fs.writeFile(`image_${i + 1}.png`, await viewSource.buffer(), () => console.log(`Image #${i + 1} downloaded`));
