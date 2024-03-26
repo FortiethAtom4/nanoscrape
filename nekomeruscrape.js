@@ -22,14 +22,14 @@ if(process.argv.length < 3){
         // Navigate the page to a URL
         await page.goto(link);
 
-        console.log("page reached, waiting for images to load");
+        console.log("page reached, waiting for class selector...");
         await page.waitForSelector('.c-viewer__comic');
-
+        console.log("image class selector detected, waiting 5 seconds for other images to load...")
         //waits 5 seconds before beginning scraping. This is to allow the many images to load to the page, which typically takes a bit.
         //This works in tandem with waitForSelector since there are multiple images with that class to wait for. Janky but it works fine enough.
         
         await sleep(5000);
-        console.log("wait completed, gathering data"); 
+        console.log("wait completed, gathering data..."); 
     
         //class selector for div with child image element: 'c-viewer__comic'
         // Set screen size
