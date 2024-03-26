@@ -22,10 +22,13 @@ if(process.argv.length < 3){
         // Navigate the page to a URL
         await page.goto(link);
 
-        //waits 10 seconds before beginning scraping. This is to allow the many images to load to the page, which typically takes a bit.
-        //There might be a better way to do this by awaiting certain class selectors to appear on the page, but I haven't dabbled with those.
-        console.log("page reached, beginning wait");
-        await sleep(10000);
+        console.log("page reached, waiting for images to load");
+        await page.waitForSelector('.c-viewer__comic');
+
+        //waits 5 seconds before beginning scraping. This is to allow the many images to load to the page, which typically takes a bit.
+        //This works in tandem with waitForSelector since there are multiple images with that class to wait for. Janky but it works.
+        
+        await sleep(5000);
         console.log("wait completed, gathering data"); 
     
         //class selector for div with child image element: 'c-viewer__comic'
@@ -49,7 +52,7 @@ if(process.argv.length < 3){
         //opens all the image links and writes them to png files. Not in a folder or anything so kinda messy, but it works.
         for (let i = 0; i < issueSrcs.length; i++) {
             const viewSource = await page.goto(issueSrcs[i]);
-            fs.writeFile(`image_${i + 1}.png`, await viewSource.buffer(), () => console.log(`Image #${i + 1} downloaded.`));
+            fs.writeFile(`image_${i + 1}.png`, await viewSource.buffer(), () => console.log(`Image #${i + 1} downloaded`));
         }
     
         await browser.close();
