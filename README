@@ -5,9 +5,11 @@
 2. Open this folder with any code-editing software. Visual Studio Code is a lightweight option if you do not have one already.
     - link to download: https://code.visualstudio.com/Download
 
-2. Open a terminal and type the following into the command line: `node/node.exe nekomeruscrape.js [URL]`, where `[URL]` is the chapter URL.
-    - Note: if you have Node.js already installed on your computer, you can simply type `node nekomeruscrape.js [link]` to do the same thing.
+3. Get Node.js.
+    - link to download: https://nodejs.org/en/download
 
-3. The scraper will get your images and write them to this folder in about 15 seconds or so. 
+4. Open a terminal and type the following into the command line: `node nekomeruscrape.js [URL]`, where `[URL]` is the chapter URL.
+
+5. The scraper will get your images and write them to this folder in about 15 seconds or so. 
 
 # ENJOY
