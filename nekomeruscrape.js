@@ -49,7 +49,7 @@ if(process.argv.length < 3){
         //opens all the image links and writes them to png files. Not in a folder or anything so kinda messy, but it works.
         for (let i = 0; i < issueSrcs.length; i++) {
             const viewSource = await page.goto(issueSrcs[i]);
-            fs.writeFile(`image_${i + 1}.png`, await viewSource.buffer(), () => console.log(`Image #${i + 1} Downloaded!`));
+            fs.writeFile(`image_${i + 1}.png`, await viewSource.buffer(), () => console.log(`Image #${i + 1} downloaded.`));
         }
     
         await browser.close();
