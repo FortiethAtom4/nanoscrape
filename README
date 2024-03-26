@@ -27,3 +27,4 @@ wait 7.5 seconds instead of 5 before scraping:
 This is done to ensure all images have loaded before scraping begins. If your computer is slow or your internet
 connection is choppy, consider using a higher timeout time to compensate.
 
+# ENJOY
