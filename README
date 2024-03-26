@@ -10,7 +10,7 @@
 
 4. Open a terminal and type the following into the command line: `npm install`. This will install everything this scraper needs to work.
 
-5. Open a terminal and type the following into the command line: `node nekomeruscrape.js [URL]`, where `[URL]` is the chapter URL.
+5. Type the following into the command line: `node nekomeruscrape.js [URL]`, where `[URL]` is the chapter URL.
 
 6. The scraper will get your images and write them to this folder in about 15 seconds or so. 
 
