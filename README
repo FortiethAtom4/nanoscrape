@@ -16,8 +16,11 @@
 
 # USAGE
 
-Command: `node nekomeruscrape.js [URL] [(optional) timeout]`
+Command: `node nekomeruscrape.js [URL] [(optional) timeout] [(optional headless)]`
 
+# OPTIONS
+
+**timeout**
 The command waits after images selectors begin loading to attempt scraping. The minimum/default wait time is 5 seconds.
 You can change this value by adding a number (in seconds) to the end of the command. for example, the following will
 wait 7.5 seconds instead of 5 before scraping:
@@ -26,5 +29,13 @@ wait 7.5 seconds instead of 5 before scraping:
 
 This is done to ensure all images have loaded before scraping begins. If your computer is slow or your internet
 connection is choppy, consider using a higher timeout time to compensate.
+
+**headless**
+By default, the scraper uses a headless browser to get images; that is, it does not visually render the browser while it operates.
+You can manually change this value by adding "false" at the end of the command line.
+*NOTE:* you must also enter a timeout value when using this command.
+
+example:
+`node nekomeruscrape.js [URL] 5 false`
 
 # ENJOY

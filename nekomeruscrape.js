@@ -5,8 +5,8 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-if(process.argv.length < 3 || process.argv.length > 4){
-    console.log("Usage: node nekomeruscrape.js [link to chapter] [(optional) timeout]");
+if(process.argv.length < 3 || process.argv.length > 5){
+    console.log("Usage: node nekomeruscrape.js [link to chapter] [(optional) timeout] [(optional) headless]");
     return
 }
 
@@ -14,9 +14,12 @@ if(process.argv.length < 3 || process.argv.length > 4){
 //https://serpapi.com/blog/web-scraping-in-javascript-complete-tutorial-for-beginner/#web-scraping-with-javascript-and-puppeteer-tutorial
 (async () => {
     try {
-
+        let headoption = true;
         // Launch the browser and open a new blank page
-        const browser = await puppeteer.launch(); // add the following: { headless: false } if you want to have the script open a physical browser
+        if(process.argv[4] == 'false'){
+            headoption = false;
+        }
+        const browser = await puppeteer.launch({ headless: headoption }); // add the following: { headless: false } if you want to have the script open a physical browser
         const page = await browser.newPage();
         let link = process.argv[2];
         // Navigate the page to a URL
@@ -27,7 +30,6 @@ if(process.argv.length < 3 || process.argv.length > 4){
 
         //waits a set amount of time before beginning scraping, default 5 seconds. This is to allow the many images to load to the page, which typically takes a bit.
         //This works in tandem with waitForSelector since there are multiple images with that class to wait for. Janky but it works fine enough.
-
         if(process.argv[3] > 5){
             console.log(`image class selector detected, waiting ${process.argv[3]} seconds for other images to load...`);
             await sleep(process.argv[3]*1000);
