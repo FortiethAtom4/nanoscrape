@@ -32,7 +32,7 @@ connection is choppy, consider using a higher timeout time to compensate.
 
 **headless**
 By default, the scraper uses a headless browser to get images; that is, it does not visually render the browser while it operates.
-You can manually change this value by adding "false" at the end of the command line.
+You can tell the scraper to render the page it is using by adding "false" at the end of the command line.
 *NOTE:* you must also enter a timeout value when using this command.
 
 example:
