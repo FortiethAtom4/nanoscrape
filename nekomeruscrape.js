@@ -6,17 +6,17 @@ if(process.argv.length < 3 || process.argv.length > 5){
     return
 }
 
-//framework from demo here:
-//https://serpapi.com/blog/web-scraping-in-javascript-complete-tutorial-for-beginner/#web-scraping-with-javascript-and-puppeteer-tutorial
 (async () => {
+
+    // Launch the browser
     let headoption = true;
-    // Launch the browser and open a new blank page
     if(process.argv[4] == 'false'){
         headoption = false;
     }
     const browser = await puppeteer.launch({ headless: headoption });
     try {
 
+        //Open a new page
         const page = await browser.newPage();
         let link = process.argv[2];
 
