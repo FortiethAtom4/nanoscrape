@@ -1,6 +1,6 @@
 # HOW TO USE THIS SCRAPER
 
-1. Get a link to the nekomeru chapter (example: https://ciao.shogakukan.co.jp/comics/title/00511/episode/9255)
+1. Get a link to the chapter on Ciao (example: https://ciao.shogakukan.co.jp/comics/title/00511/episode/9255)
 
 2. Get Node.js.
     - link to download: https://nodejs.org/en/download
@@ -9,13 +9,13 @@
 
 4. Type the following into the command line: `npm install`. This will install everything the scraper needs to work.
 
-5. Type the following into the command line: `node nekomeruscrape.js [URL]`, where `[URL]` is the chapter URL.
+5. Type the following into the command line: `node ciaoscrape.js [URL]`, where `[URL]` is the chapter URL.
 
 6. The scraper will get your images and write them to the "images" folder.
 
 # USAGE
 
-Command: `node nekomeruscrape.js [URL] [(optional) timeout] [(optional headless)]`
+Command: `node ciaoscrape.js [URL] [(optional) timeout] [(optional headless)]`
 
 # OPTIONS
 
@@ -24,7 +24,7 @@ The command waits for the network to be idle before beginning scraping. The defa
 You can change this value by adding a number (in milliseconds) to the end of the command. For example, the following will
 wait for 5000 milliseconds of network idle time instead of 1000 before scraping:
 
-`node nekomeruscrape.js [URL] 5000`
+`node ciaoscrape.js [URL] 5000`
 
 This is done to ensure all images have loaded before scraping begins. If your computer is slow or your internet
 connection is choppy, consider using a higher timeout time to compensate. To avoid loading errors, I highly recommend not using values lower
@@ -36,6 +36,6 @@ You can tell the scraper to render the page it is using by adding "false" at the
 *NOTE:* You must also enter a timeout value when using this command.
 
 Example:
-`node nekomeruscrape.js [URL] 1000 false`
+`node ciaoscrape.js [URL] 1000 false`
 
 # ENJOY
