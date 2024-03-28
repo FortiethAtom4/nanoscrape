@@ -70,9 +70,9 @@ if(process.argv.length < 3 || process.argv.length > 5){
 
 
     }catch(err){
-        console.error(err);
+        console.error(`\nAn error occurred during scraping. Stack trace: \n${err.stack}\n\nEnsure your URL is valid and try again.`);
     } finally {
         await browser.close();
-        console.log("Process quit successfully.");
+        console.log("\nProcess quit successfully.");
     }
 })();
