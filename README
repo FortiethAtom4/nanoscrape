@@ -21,10 +21,10 @@ Command: `node nekomeruscrape.js [URL] [(optional) timeout] [(optional headless)
 
 **timeout**
 The command waits for the network to be idle before beginning scraping. The default wait time is 1000 milliseconds.
-You can change this value by adding a number (in milliseconds) to the end of the command. for example, the following will
-wait 500 milliseconds instead of 1000 before scraping:
+You can change this value by adding a number (in milliseconds) to the end of the command. For example, the following will
+wait for 5000 milliseconds of network idle time instead of 1000 before scraping:
 
-`node nekomeruscrape.js [URL] 1000`
+`node nekomeruscrape.js [URL] 5000`
 
 This is done to ensure all images have loaded before scraping begins. If your computer is slow or your internet
 connection is choppy, consider using a higher timeout time to compensate. To avoid loading errors, I highly recommend not using values lower
@@ -33,9 +33,9 @@ than 1000 milliseconds.
 **headless**
 By default, the scraper uses a headless browser to get images; that is, it does not visually render the browser while it operates.
 You can tell the scraper to render the page it is using by adding "false" at the end of the command line.
-*NOTE:* you must also enter a timeout value when using this command.
+*NOTE:* You must also enter a timeout value when using this command.
 
-example:
+Example:
 `node nekomeruscrape.js [URL] 1000 false`
 
 # ENJOY
