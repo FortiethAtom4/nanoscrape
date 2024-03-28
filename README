@@ -2,13 +2,12 @@
 
 1. Get a link to the nekomeru chapter (example: https://ciao.shogakukan.co.jp/comics/title/00511/episode/9255)
 
-2. Open this folder with any code-editing software. Visual Studio Code is a lightweight option if you do not have one already.
-    - link to download: https://code.visualstudio.com/Download
-
-3. Get Node.js.
+2. Get Node.js.
     - link to download: https://nodejs.org/en/download
 
-4. Open a terminal and type the following into the command line: `npm install`. This will install everything the scraper needs to work.
+3. Open a terminal and navigate to this folder. Any terminal, such as Command Prompt or Git Bash, will do.
+
+4. Type the following into the command line: `npm install`. This will install everything the scraper needs to work.
 
 5. Type the following into the command line: `node nekomeruscrape.js [URL]`, where `[URL]` is the chapter URL.
 
