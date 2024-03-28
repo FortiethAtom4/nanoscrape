@@ -74,7 +74,7 @@ if(process.argv.length < 3 || process.argv.length > 5){
         }
 
         await browser.close();
-        console.log("Process completed successfully");
+        console.log("Process completed successfully.");
     }catch(err){
         console.error(err);
     }
