@@ -23,20 +23,22 @@ if(process.argv.length < 3 || process.argv.length > 5){
         const page = await browser.newPage();
         let link = process.argv[2];
         // Navigate the page to a URL
-        await page.goto(link);
+        // await page.goto(link);
 
-        console.log("page reached, waiting for class selector...");
-        await page.waitForSelector('.c-viewer__comic');
-
-        //waits a set amount of time before beginning scraping, default 5 seconds. This is to allow the many images to load to the page, which typically takes a bit.
-        //This works in tandem with waitForSelector since there are multiple images with that class to wait for. Janky but it works fine enough.
-        if(process.argv[3] > 5){
-            console.log(`image class selector detected, waiting ${process.argv[3]} seconds for other images to load...`);
-            await sleep(process.argv[3]*1000);
-        }else{
-            console.log(`image class selector detected, waiting 5 seconds for other images to load...`);
-            await sleep(5000);
+        let timeout = 1000;
+        if(process.argv[3]){
+            timeout = process.argv[3];
         }
+
+        //waits a set amount of network idle time before beginning scraping, default 1 second (1000 milliseconds). 
+        //This is to allow the many images to load to the page, which typically takes a bit.
+        console.log("reaching page and waiting for idle network...");
+        await Promise.all([
+            page.goto(link, {
+              waitUntil: "domcontentloaded",
+            }),
+            page.waitForNetworkIdle({ idleTime: timeout }),
+          ]);
 
         console.log("wait completed, gathering data..."); 
     
@@ -59,10 +61,14 @@ if(process.argv.length < 3 || process.argv.length > 5){
             return imglinks;
         });
 
-        //opens all the object URL links and writes the data to png files. Images are downloaded to this folder.
+        //opens all the object URL links and writes the data to png files. Images are saved in the "images" folder.
+        if(!fs.existsSync(__dirname + "/images")){
+            fs.mkdirSync(__dirname + "/images");
+        }
+
         for (let i = 0; i < issueSrcs.length; i++) {
             const viewSource = await page.goto(issueSrcs[i]);
-            fs.writeFile(`image_${i + 1}.png`, await viewSource.buffer(), () => console.log(`Image #${i + 1} downloaded`));
+            fs.writeFile(__dirname + `/images/image_${i + 1}.png`, await viewSource.buffer(), () => console.log(`Image #${i + 1} downloaded`));
         }
     
         await browser.close();

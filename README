@@ -12,7 +12,7 @@
 
 5. Type the following into the command line: `node nekomeruscrape.js [URL]`, where `[URL]` is the chapter URL.
 
-6. The scraper will get your images and write them to this folder in about 15 seconds or so. 
+6. The scraper will get your images and write them to this folder in about 10 seconds or so. 
 
 # USAGE
 
@@ -21,11 +21,11 @@ Command: `node nekomeruscrape.js [URL] [(optional) timeout] [(optional headless)
 # OPTIONS
 
 **timeout**
-The command waits after images selectors begin loading to attempt scraping. The minimum/default wait time is 5 seconds.
-You can change this value by adding a number (in seconds) to the end of the command. for example, the following will
-wait 7.5 seconds instead of 5 before scraping:
+The command waits for the network to be idle before beginning scraping. The default wait time is 1000 milliseconds.
+You can change this value by adding a number (in milliseconds) to the end of the command. for example, the following will
+wait 500 milliseconds instead of 1000 before scraping:
 
-`node nekomeruscrape.js [URL] 7.5`
+`node nekomeruscrape.js [URL] 1000`
 
 This is done to ensure all images have loaded before scraping begins. If your computer is slow or your internet
 connection is choppy, consider using a higher timeout time to compensate.
@@ -36,6 +36,6 @@ You can tell the scraper to render the page it is using by adding "false" at the
 *NOTE:* you must also enter a timeout value when using this command.
 
 example:
-`node nekomeruscrape.js [URL] 5 false`
+`node nekomeruscrape.js [URL] 1000 false`
 
 # ENJOY
