@@ -1,10 +1,6 @@
 const puppeteer = require('puppeteer');
 const fs = require("fs");
 
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-
 if(process.argv.length < 3 || process.argv.length > 5){
     console.log("Usage: node nekomeruscrape.js [link to chapter] [(optional) timeout] [(optional) headless]");
     return
@@ -13,17 +9,16 @@ if(process.argv.length < 3 || process.argv.length > 5){
 //framework from demo here:
 //https://serpapi.com/blog/web-scraping-in-javascript-complete-tutorial-for-beginner/#web-scraping-with-javascript-and-puppeteer-tutorial
 (async () => {
+    let headoption = true;
+    // Launch the browser and open a new blank page
+    if(process.argv[4] == 'false'){
+        headoption = false;
+    }
+    const browser = await puppeteer.launch({ headless: headoption });
     try {
-        let headoption = true;
-        // Launch the browser and open a new blank page
-        if(process.argv[4] == 'false'){
-            headoption = false;
-        }
-        const browser = await puppeteer.launch({ headless: headoption }); // add the following: { headless: false } if you want to have the script open a physical browser
+
         const page = await browser.newPage();
         let link = process.argv[2];
-        // Navigate the page to a URL
-        // await page.goto(link);
 
         let timeout = 1000;
         if(process.argv[3]){
@@ -73,9 +68,11 @@ if(process.argv.length < 3 || process.argv.length > 5){
             await fs.writeFile(__dirname + `/images/image_${i + 1}.png`, await viewSource.buffer(), () => console.log(`-> Image #${i + 1} downloaded.`));
         }
 
-        await browser.close();
-        console.log("Process completed successfully.");
+
     }catch(err){
         console.error(err);
+    } finally {
+        await browser.close();
+        console.log("Process quit successfully.");
     }
 })();
