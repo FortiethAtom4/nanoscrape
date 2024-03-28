@@ -32,15 +32,16 @@ if(process.argv.length < 3 || process.argv.length > 5){
 
         //waits a set amount of network idle time before beginning scraping, default 1 second (1000 milliseconds). 
         //This is to allow the many images to load to the page, which typically takes a bit.
-        console.log("reaching page and waiting for idle network...");
+        console.log("Waiting for page load...");
         await Promise.all([
             page.goto(link, {
               waitUntil: "domcontentloaded",
-            }),
-            page.waitForNetworkIdle({ idleTime: timeout }),
-          ]);
+            }).then(() => (console.log("-> Page reached."))),
+            page.waitForSelector(".c-viewer__comic").then(() => (console.log("-> Image element selector detected."))), 
+            page.waitForNetworkIdle({ idleTime: timeout }).then(() => (console.log("-> Network idle timeout reached.")))
 
-        console.log("wait completed, gathering data..."); 
+          ]).then(() => (console.log("Proceeding with scraping...")));
+
     
         //class selector for div with child image element: 'c-viewer__comic'
 
@@ -57,21 +58,23 @@ if(process.argv.length < 3 || process.argv.length > 5){
 
                 imglinks.push(attempt);
             }
-            
             return imglinks;
         });
 
         //opens all the object URL links and writes the data to png files. Images are saved in the "images" folder.
         if(!fs.existsSync(__dirname + "/images")){
+            console.log("No image directory found. Creating directory...");
             fs.mkdirSync(__dirname + "/images");
         }
 
+        console.log("Writing images to directory...")
         for (let i = 0; i < issueSrcs.length; i++) {
             const viewSource = await page.goto(issueSrcs[i]);
-            fs.writeFile(__dirname + `/images/image_${i + 1}.png`, await viewSource.buffer(), () => console.log(`Image #${i + 1} downloaded`));
+            await fs.writeFile(__dirname + `/images/image_${i + 1}.png`, await viewSource.buffer(), () => console.log(`-> Image #${i + 1} downloaded.`));
         }
-    
+
         await browser.close();
+        console.log("Process completed successfully");
     }catch(err){
         console.error(err);
     }
