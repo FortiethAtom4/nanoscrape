@@ -24,7 +24,7 @@ The command waits for the network to be idle before beginning scraping. The defa
 You can change this value by adding a number (in milliseconds) to the end of the command. for example, the following will
 wait 500 milliseconds instead of 1000 before scraping:
 
-`node nekomeruscrape.js [URL] 1000`
+`node nekomeruscrape.js [URL] 500`
 
 This is done to ensure all images have loaded before scraping begins. If your computer is slow or your internet
 connection is choppy, consider using a higher timeout time to compensate. To avoid loading errors, I highly recommend not using values lower
