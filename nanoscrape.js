@@ -48,7 +48,7 @@ let dataSaveFunction;
         const page = await browser.newPage();
         let link = process.argv[2];
 
-        let timeout = 1000;
+        let timeout = 2000;
         if(process.argv[3]){
             timeout = process.argv[3];
         }
@@ -103,9 +103,13 @@ let dataSaveFunction;
                 break
 
             case "tonarinoyj.jp":
+            case "shonenjumpplus.com":
                 //class of next-page button: "page-navigation-forward rtl js-slide-forward"
                 await waitForPageLoad(page,timeout,".page-image");
                 console.log("This site dynamically loads images. Beginning page click simulation...");
+                console.log("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+                console.log("WARNING: this process is painfully slow. Get yourself some coffee.");
+                console.log("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 
                 issueSrcs = new Set();
                 let prevLength = -1;
@@ -130,8 +134,11 @@ let dataSaveFunction;
                         issueSrcs.add(pageChunk[i]);
                     }
                     //This simulates clicking further into the chapter, which causes more pages to load.
-                    await page.click(".page-navigation-forward").then(() => (console.log(`-> Got ${Array.from(issueSrcs).length - prevLength} images. Total: ${Array.from(issueSrcs).length}`)));
-                    await page.waitForNetworkIdle(50);
+
+                    await page.click(".page-navigation-forward")
+                    .then(() => (console.log(`-> Got ${Array.from(issueSrcs).length - prevLength} images. Total: ${Array.from(issueSrcs).length}`)))
+                    .then(() => (page.waitForNetworkIdle({idleTime: timeout})));
+                    
                 }
 
                 dataSaveFunction = (directoryname) => {

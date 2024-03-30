@@ -30,15 +30,15 @@ Command: `node nanoscrape.js [URL] [(optional) timeout] [(optional headless)] [(
 # OPTIONS
 
 **timeout**
-The command waits for the network to be idle before beginning scraping. The default wait time is 1000 milliseconds.
+The command waits for the network to be idle before beginning scraping. The default wait time is 2000 milliseconds.
 You can change this value by adding a number (in milliseconds) to the end of the command. For example, the following will
-wait for 5000 milliseconds of network idle time instead of 1000 before scraping:
+wait for 5000 milliseconds of network idle time instead of 2000 before scraping:
 
 `node nanoscrape.js [URL] 5000`
 
 This is done to ensure all images have loaded before scraping begins. If your computer is slow or your internet
 connection is choppy, consider using a higher timeout time to compensate. To avoid loading errors, I highly recommend not using values lower
-than 1000 milliseconds.
+than 2000 milliseconds.
 
 **headless**
 By default, the scraper uses a headless browser to get images; that is, it does not visually render the browser while it operates.
@@ -46,7 +46,7 @@ You can tell the scraper to render the page it is using by adding "false" at the
 *NOTE:* You must also enter a timeout value when using this command.
 
 Example:
-`node nanoscrape.js [URL] 1000 false`
+`node nanoscrape.js [URL] 2000 false`
 
 **path**
 By default, the scraper will automatically generate a name for the image folder. You can override this by adding in a custom name for your folder(s)
@@ -54,8 +54,8 @@ on the command line. Subfolders are permitted, e.g. "folder-1/folder-2". The ima
 *NOTE:* You must also enter a timeout value and a headless value (true or false) when using this command.
 
 Examples:
-`node nanoscrape.js [URL] 1000 true my-folder-name`
-`note nanoscrape.js [URL] 1000 true "folder name with spaces"`
+`node nanoscrape.js [URL] 2000 true my-folder-name`
+`note nanoscrape.js [URL] 2000 true "folder name with spaces"`
 
 
 
