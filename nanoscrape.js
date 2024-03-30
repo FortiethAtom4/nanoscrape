@@ -8,9 +8,11 @@ if(process.argv.length < 3 || process.argv.length > 6){
 
 //works for: 
 //1. Ciao
-//test link: https://ciao.shogakukan.co.jp/comics/title/00511/episode/9255 (NekoMeru Chapter 5)
+//test link: https://ciao.shogakukan.co.jp/comics/title/00511/episode/9255 (NekoMeru, Chapter 5)
 //2. Tonari no Young Jump
-//test link: https://tonarinoyj.jp/episode/4856001361151760115 (Renai Daikou chapter 1)
+//test link: https://tonarinoyj.jp/episode/4856001361151760115 (Renai Daikou, Chapter 1)
+//3. Shounen Jump Plus
+//test link: https://shonenjumpplus.com/episode/3269754496567812827 (Kokoro no Program, Chapter 1)
 
 //working on: Young Jump
 //test link: https://www.s-manga.net/reader/main.php?cid=9784088931678 (some baseball manga i forget the name)
