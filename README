@@ -25,7 +25,7 @@ the website, Tonari no Young Jump manga chapters will take much longer to scrape
 
 # USAGE
 
-Command: `node nanoscrape.js [URL] [(optional) timeout] [(optional headless)]`
+Command: `node nanoscrape.js [URL] [(optional) timeout] [(optional headless)] [(optional) path]`
 
 # OPTIONS
 
