@@ -131,6 +131,7 @@ let dataSaveFunction;
                     }
                     //This simulates clicking further into the chapter, which causes more pages to load.
                     await page.click(".page-navigation-forward").then(() => (console.log(`-> Got ${Array.from(issueSrcs).length - prevLength} images. Total: ${Array.from(issueSrcs).length}`)));
+                    await page.waitForNetworkIdle(50);
                 }
 
                 dataSaveFunction = (directoryname) => {
