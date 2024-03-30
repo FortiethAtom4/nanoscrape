@@ -1,8 +1,8 @@
 const puppeteer = require('puppeteer');
 const fs = require("fs");
 
-if(process.argv.length < 3 || process.argv.length > 5){
-    console.log("Usage: node ciaoscrape.js [link to chapter] [(optional) timeout] [(optional) headless]");
+if(process.argv.length < 3 || process.argv.length > 6){
+    console.log("Usage: node nanoscrape.js [link to chapter] [(optional) timeout] [(optional) headless] [(optional) path]");
     return
 }
 
@@ -94,10 +94,10 @@ let dataSaveFunction;
                 });
 
 
-                dataSaveFunction = async () => {
+                dataSaveFunction = async (directoryname) => {
                     for (let i = 0; i < issueSrcs.length; i++) {
                         const viewSource = await page.goto(issueSrcs[i]);
-                        await fs.writeFile(__dirname + `/images/page_${i + 1}.png`, await viewSource.buffer(), () => console.log(`-> Page #${i + 1} downloaded.`));
+                        await fs.writeFile(directoryname + `/page_${i + 1}.png`, await viewSource.buffer(), () => console.log(`-> Page #${i + 1} downloaded.`));
                     }
                 }
                 break
@@ -133,12 +133,12 @@ let dataSaveFunction;
                     await page.click(".page-navigation-forward").then(() => (console.log(`-> Got ${Array.from(issueSrcs).length - prevLength} images. Total: ${Array.from(issueSrcs).length}`)));
                 }
 
-                dataSaveFunction = () => {
+                dataSaveFunction = (directoryname) => {
                     issueSrcs = Array.from(issueSrcs);
                     for (let i = 0; i < issueSrcs.length; i++) {
                         // await page.goto(issueSrcs[i],{waitUntil: 'domcontentloaded'});
                         const { buffer } = parseDataUrl(issueSrcs[i]);
-                        fs.writeFileSync(`images/page_${i + 1}.png`, buffer, 'base64');
+                        fs.writeFileSync(`${directoryname}/page_${i + 1}.png`, buffer, 'base64');
                         console.log(`-> Page #${i + 1} downloaded.`);
 
                     }
@@ -155,14 +155,27 @@ let dataSaveFunction;
         }
         
 
-        //opens all the URL links and writes the data to png files. Images are saved in the "images" folder.
-        if(!fs.existsSync(__dirname + "/images")){
-            console.log("No image directory found. Creating directory...");
-            fs.mkdirSync(__dirname + "/images");
+        //opens all the URL links and writes the data to png files. Images are saved in a folder in this directory.
+        let directoryname;
+        if(!process.argv[5]){
+            directoryname = __dirname + "/images_" + await page.evaluate(() => {
+                return window.location.hostname;
+            });
+        } else{
+            directoryname = __dirname + "/" + process.argv[5];
         }
 
+        let shift = 0;
+        while(fs.existsSync(directoryname)){
+            shift += 1;
+            directoryname = directoryname + "_" + shift;
+        }
+        console.log("Creating directory...");
+        fs.mkdirSync(directoryname, { recursive: true });
+
+
         console.log("Writing images to directory...");
-        await dataSaveFunction();
+        await dataSaveFunction(directoryname);
 
 
     }catch(err){
