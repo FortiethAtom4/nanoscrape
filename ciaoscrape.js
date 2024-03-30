@@ -111,6 +111,8 @@ let dataSaveFunction;
                 let prevLength = -1;
                 await page.click(".page-navigation-forward");
 
+                //Gets canvas Data URL links. Because of the potential to accidentally grab copies of the same URL
+                //due to this website's dynamic load/offload nature, a Set data object is necessary.
                 while(prevLength != Array.from(issueSrcs).length){
 
                     prevLength = Array.from(issueSrcs).length;
@@ -127,7 +129,7 @@ let dataSaveFunction;
                     for(let i = 0; i < pageChunk.length; i++){
                         issueSrcs.add(pageChunk[i]);
                     }
-                    
+                    //This simulates clicking further into the chapter, which causes more pages to load.
                     await page.click(".page-navigation-forward").then(() => (console.log(`-> Got ${Array.from(issueSrcs).length - prevLength} images. Total: ${Array.from(issueSrcs).length}`)));
                 }
 
