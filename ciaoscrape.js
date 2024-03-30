@@ -2,35 +2,47 @@ const puppeteer = require('puppeteer');
 const fs = require("fs");
 
 if(process.argv.length < 3 || process.argv.length > 5){
-    console.log("Usage: node nekomeruscrape.js [link to chapter] [(optional) timeout] [(optional) headless]");
+    console.log("Usage: node ciaoscrape.js [link to chapter] [(optional) timeout] [(optional) headless]");
     return
 }
 
-//works for: Ciao
+//works for: 
+//1. Ciao
 //test link: https://ciao.shogakukan.co.jp/comics/title/00511/episode/9255 (NekoMeru Chapter 5)
-
-//working on: Tonari no Young Jump
+//2. Tonari no Young Jump
 //test link: https://tonarinoyj.jp/episode/4856001361151760115 (Renai Daikou chapter 1)
-//Problem: the page only loads new manga pages as you read them, meaning the page needs to be interacted with to get the whole chapter.
 
-
+//working on: Young Jump
+//test link: https://www.s-manga.net/reader/main.php?cid=9784088931678 (some baseball manga i forget the name)
 
 //waits a set amount of network idle time before beginning scraping, default 1 second (1000 milliseconds). 
 //This is to allow the many images to load to the page, which typically takes a bit.
-async function waitForPageLoad(page,timeout){
+async function waitForPageLoad(page,timeout,selector){
     console.log("Waiting for page elements to load...");
-    await page.waitForNetworkIdle({ idleTime: timeout }).then(() => (console.log("-> Network idle timeout reached.")))
-    .then(() => (console.log("Page elements loaded, proceeding with scraping...")));
+    await Promise.all([
+        page.waitForSelector(selector).then(() => (console.log("-> Page image elements detected."))),
+        page.waitForNetworkIdle({ idleTime: timeout }).then(() => (console.log("-> Network idle timeout reached.")))
+    ]).then(() => (console.log("Page elements loaded, proceeding with scraping...")));
 }
 
-(async () => {
+// method from https://intoli.com/blog/saving-images/
+const parseDataUrl = (dataUrl) => {
+    const matches = dataUrl.match(/^data:(.+);base64,(.+)$/);
+    if (matches.length !== 3) {
+      throw new Error('Could not parse data URL.');
+    }
+    return { mime: matches[1], buffer: Buffer.from(matches[2], 'base64') };
+};
 
+let dataSaveFunction;
+
+(async () => {
     // Launch the browser
     let headoption = true;
     if(process.argv[4] == 'false'){
         headoption = false;
     }
-    const browser = await puppeteer.launch({ headless: headoption });
+    const browser = await puppeteer.launch(  { args: ['--disable-web-security' ], headless: headoption });
     try {
         //Open a new page
         const page = await browser.newPage();
@@ -63,7 +75,7 @@ async function waitForPageLoad(page,timeout){
                 
                 //class selector for div with child image element: 'c-viewer__comic'
 
-                await waitForPageLoad(page,timeout);
+                await waitForPageLoad(page,timeout,".c-viewer__comic");
 
                 //gets links to blob object URLs.
                 issueSrcs = await page.evaluate(() => {
@@ -80,43 +92,61 @@ async function waitForPageLoad(page,timeout){
                     }
                     return imglinks;
                 });
+
+
+                dataSaveFunction = async () => {
+                    for (let i = 0; i < issueSrcs.length; i++) {
+                        const viewSource = await page.goto(issueSrcs[i]);
+                        await fs.writeFile(__dirname + `/images/page_${i + 1}.png`, await viewSource.buffer(), () => console.log(`-> Page #${i + 1} downloaded.`));
+                    }
+                }
                 break
 
             case "tonarinoyj.jp":
                 //class of next-page button: "page-navigation-forward rtl js-slide-forward"
+                await waitForPageLoad(page,timeout,".page-image");
+                console.log("This site dynamically loads images. Beginning page click simulation...");
 
-                await waitForPageLoad(page,timeout);
+                issueSrcs = new Set();
+                let prevLength = -1;
+                await page.click(".page-navigation-forward");
 
-                let newPage = await page.evaluate(() => {
-                    const canvasselector = document.getElementsByClassName("page-image");
-                    return canvasselector;
-                }).then(() => (console.log("New page found, evaluating...")));
-                issueSrcs.push(newPage);
-                
+                while(prevLength != Array.from(issueSrcs).length){
 
-                // let nextPageElements;
-                // do {
+                    prevLength = Array.from(issueSrcs).length;
 
-                //     nextPageElements = await page.evaluate(() => {
-                //         return document.getElementsByClassName("page-navigation-forward rtl js-slide-forward");
-                //     })
-                //     console.log(`Moving to ${nextPageElements}`);
-                //     await page.click(nextPageElements);
+                    let pageChunk = await page.evaluate(async () => {
+                        let canvases = document.getElementsByTagName("canvas");
+                        let canvasdata = [];
+                        for(let i = 0; i < canvases.length; i++){
+                            canvasdata.push(canvases[i].toDataURL());
+                        }
+                        return canvasdata;
+                    });
 
-                //     let newPage = await page.evaluate(() => {
-                //         const canvasselector = document.getElementsByClassName("page-image js-page-image");
-                //         return canvasselector;
-                //     }).then(() => (console.log("New page found, evaluating...")));
+                    for(let i = 0; i < pageChunk.length; i++){
+                        issueSrcs.add(pageChunk[i]);
+                    }
+                    
+                    await page.click(".page-navigation-forward").then(() => (console.log(`-> Got ${Array.from(issueSrcs).length - prevLength} images. Total: ${Array.from(issueSrcs).length}`)));
+                }
 
-                //     for(let i = 0; i < newPage.length; i++){
-                //         issueSrcs.push(newPage[i]);
-                //     }
+                dataSaveFunction = () => {
+                    issueSrcs = Array.from(issueSrcs);
+                    for (let i = 0; i < issueSrcs.length; i++) {
+                        // await page.goto(issueSrcs[i],{waitUntil: 'domcontentloaded'});
+                        const { buffer } = parseDataUrl(issueSrcs[i]);
+                        fs.writeFileSync(`images/page_${i + 1}.png`, buffer, 'base64');
+                        console.log(`-> Page #${i + 1} downloaded.`);
 
-                // } while (page.url() === process.argv[2]);
+                    }
+                };
+                break
 
-                console.log(issueSrcs);
-                console.log("Coming soon");
+            case "www.s-manga.net":
+                console.log("Not yet available. Coming soon");
                 return
+                //break
 
             default:
                 throw new Error(`Given URL "${process.argv[2]}" is not a recognized URL for manga scraping.`);
@@ -129,11 +159,8 @@ async function waitForPageLoad(page,timeout){
             fs.mkdirSync(__dirname + "/images");
         }
 
-        console.log("Writing images to directory...")
-        for (let i = 0; i < issueSrcs.length; i++) {
-            const viewSource = await page.goto(issueSrcs[i]);
-            await fs.writeFile(__dirname + `/images/page_${i + 1}.png`, await viewSource.buffer(), () => console.log(`-> Page #${i + 1} downloaded.`));
-        }
+        console.log("Writing images to directory...");
+        await dataSaveFunction();
 
 
     }catch(err){

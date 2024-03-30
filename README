@@ -1,6 +1,9 @@
 # HOW TO USE THIS SCRAPER
 
-1. Get a link to the chapter on Ciao (example: https://ciao.shogakukan.co.jp/comics/title/00511/episode/9255)
+1. Get a link to the chapter on either Ciao or Tonari no Young Jump.
+- Example test links:
+    - from Ciao: https://ciao.shogakukan.co.jp/comics/title/00511/episode/9255 (NekoMeru Chapter 5)
+    - from Young Jump: https://tonarinoyj.jp/episode/4856001361151760115 (Love Agency Chapter 1)
 
 2. Get Node.js.
     - link to download: https://nodejs.org/en/download
@@ -11,7 +14,8 @@
 
 5. Type the following into the command line: `node ciaoscrape.js [URL]`, where `[URL]` is the chapter URL.
 
-6. The scraper will get your images and write them to the "images" folder.
+6. The scraper will get your images and write them to the "images" folder. Note that, due to the dynamic nature of 
+the website, Tonari no Young Jump manga chapters will take much longer to scrape than Ciao chapters.
 
 # USAGE
 
