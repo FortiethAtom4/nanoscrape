@@ -6,10 +6,11 @@ Made by Zirconium (@FortiethAtom4 on Github)
 
 # HOW TO USE THIS SCRAPER
 
-1. Get a link to the chapter on either Ciao or Tonari no Young Jump.
+1. Get a link to the chapter on either Ciao, Shounen Jump Plus, or Tonari no Young Jump.
 - Example test links:
     - from Ciao: https://ciao.shogakukan.co.jp/comics/title/00511/episode/9255 (NekoMeru Chapter 5)
     - from Young Jump: https://tonarinoyj.jp/episode/4856001361151760115 (Love Agency Chapter 1)
+    - from Shounen Young Jump: https://shonenjumpplus.com/episode/3269754496567812827 (Kokoro no Program Chapter 1)
 
 2. Get Node.js.
     - link to download: https://nodejs.org/en/download
