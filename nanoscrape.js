@@ -27,6 +27,8 @@ async function waitForPageLoad(page,timeout,selector){
     ]).then(() => (console.log("Page elements loaded, proceeding with scraping...")));
 }
 
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
 // method from https://intoli.com/blog/saving-images/
 const parseDataUrl = (dataUrl) => {
     const matches = dataUrl.match(/^data:(.+);base64,(.+)$/);
@@ -37,6 +39,7 @@ const parseDataUrl = (dataUrl) => {
 };
 
 let dataSaveFunction;
+let directoryname; //these will be initialized on a successful scrape.
 
 (async () => {
     // Launch the browser
@@ -50,7 +53,7 @@ let dataSaveFunction;
         const page = await browser.newPage();
         let link = process.argv[2];
 
-        let timeout = 2000;
+        let timeout = 1000;
         if(process.argv[3]){
             timeout = process.argv[3];
         }
@@ -101,6 +104,7 @@ let dataSaveFunction;
                         const viewSource = await page.goto(issueSrcs[i]);
                         await fs.writeFile(directoryname + `/page_${i + 1}.png`, await viewSource.buffer(), () => console.log(`-> Page #${i + 1} downloaded.`));
                     }
+                    return
                 }
                 break
 
@@ -132,12 +136,13 @@ let dataSaveFunction;
                         issueSrcs.add(pageChunk[i]);
                     }
                     //This simulates clicking further into the chapter, which causes more pages to load.
-                    //I can go forward ~6 pages without losing anything... hopefully
 
-                    for(let i = 0; i < 3; i++){
-                        await page.click(".page-navigation-forward");
+                    for(let i = 0; i < 4; i++){
+                        await page.click(".page-navigation-forward")
+                        .then(() => (sleep(250))); //simulates clicking forward a few pages with a slight pause in between each click.
                     }
                     await page.waitForNetworkIdle({idleTime: timeout});
+                    
                     console.log(`-> Got ${Array.from(issueSrcs).length - prevLength} images. Total: ${Array.from(issueSrcs).length}`)
 
                     
@@ -166,7 +171,7 @@ let dataSaveFunction;
         
 
         //opens all the URL links and writes the data to png files. Images are saved in a folder in this directory.
-        let directoryname;
+
         if(!process.argv[5]){
             directoryname = __dirname + "/images_" + await page.evaluate(() => {
                 return window.location.hostname;
@@ -186,13 +191,15 @@ let dataSaveFunction;
 
         console.log("Writing images to directory...");
         await dataSaveFunction(directoryname);
-        console.log(`\n-> Scrape complete. Images have been saved in directory ${directoryname}.`);
 
 
     }catch(err){
         console.error(`\nAn error occurred during scraping. Stack trace: \n${err.stack}\n\nEnsure your URL and options are correct and try again.`);
     } finally {
         await browser.close();
+        if(directoryname){
+            console.log(`\n-> Scrape complete. Images have been saved in directory ${directoryname}.`);
+        }
         console.log("\n-> Scraper closed successfully.");
     }
 })();
