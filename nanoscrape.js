@@ -112,7 +112,6 @@ let dataSaveFunction;
 
                 issueSrcs = new Set();
                 let prevLength = -1;
-                await page.click(".page-navigation-forward");
 
                 //Gets canvas Data URL links. Because of the potential to accidentally grab copies of the same URL
                 //due to this website's dynamic load/offload nature, a Set data object is necessary.
@@ -136,9 +135,9 @@ let dataSaveFunction;
                     //I can go forward ~6 pages without losing anything... hopefully
 
                     for(let i = 0; i < 3; i++){
-                        await page.click(".page-navigation-forward")
-                        .then(() => (page.waitForNetworkIdle({idleTime: 50})));
+                        await page.click(".page-navigation-forward");
                     }
+                    await page.waitForNetworkIdle({idleTime: timeout});
                     console.log(`-> Got ${Array.from(issueSrcs).length - prevLength} images. Total: ${Array.from(issueSrcs).length}`)
 
                     
@@ -187,6 +186,7 @@ let dataSaveFunction;
 
         console.log("Writing images to directory...");
         await dataSaveFunction(directoryname);
+        console.log(`\n-> Scrape complete. Images have been saved in directory ${directoryname}.`);
 
 
     }catch(err){
