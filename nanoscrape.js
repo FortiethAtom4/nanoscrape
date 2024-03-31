@@ -109,9 +109,6 @@ let dataSaveFunction;
                 //class of next-page button: "page-navigation-forward rtl js-slide-forward"
                 await waitForPageLoad(page,timeout,".page-image");
                 console.log("This site dynamically loads images. Beginning page click simulation...");
-                console.log("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-                console.log("WARNING: this process is painfully slow. Get yourself some coffee.");
-                console.log("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 
                 issueSrcs = new Set();
                 let prevLength = -1;
@@ -136,10 +133,14 @@ let dataSaveFunction;
                         issueSrcs.add(pageChunk[i]);
                     }
                     //This simulates clicking further into the chapter, which causes more pages to load.
+                    //I can go forward ~6 pages without losing anything... hopefully
 
-                    await page.click(".page-navigation-forward")
-                    .then(() => (console.log(`-> Got ${Array.from(issueSrcs).length - prevLength} images. Total: ${Array.from(issueSrcs).length}`)))
-                    .then(() => (page.waitForNetworkIdle({idleTime: timeout})));
+                    for(let i = 0; i < 3; i++){
+                        await page.click(".page-navigation-forward")
+                        .then(() => (page.waitForNetworkIdle({idleTime: 50})));
+                    }
+                    console.log(`-> Got ${Array.from(issueSrcs).length - prevLength} images. Total: ${Array.from(issueSrcs).length}`)
+
                     
                 }
 
