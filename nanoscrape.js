@@ -29,7 +29,7 @@ async function waitForPageLoad(page,timeout,selector){
     ]).then(() => (console.log("Page elements loaded, proceeding with scraping...")));
 }
 
-async function waitForPageLoad(page,selector){
+async function waitForPageLoadAlt(page,selector){
     console.log("Waiting for page elements to load...");
     await page.waitForSelector(selector).then(() => (console.log("-> Page image elements detected.")))
     .then(() => (console.log("Page elements loaded, proceeding with scraping...")));
@@ -132,7 +132,7 @@ let directoryname; //these will be initialized on a successful scrape.
 
                 }
                 //class of next-page button: "page-navigation-forward rtl js-slide-forward"
-                await waitForPageLoad(page,".page-image");
+                await waitForPageLoadAlt(page,".page-image");
                 console.log("This site dynamically loads images. Beginning page click simulation...");
                 console.log("WARNING: this can take some time, depending on chapter length.");
 
@@ -140,7 +140,7 @@ let directoryname; //these will be initialized on a successful scrape.
                 let prevLength = -1;
 
                 //Gets canvas Data URL links. Because of this algorithm's potential to accidentally grab copies of the same URL
-                //due to this website's dynamic load/offload nature, a Set data object is necessary.
+                //due to the website's dynamic load/offload nature, a Set data object is necessary.
                 while(prevLength != Array.from(issueSrcs).length){
 
                     prevLength = Array.from(issueSrcs).length;
