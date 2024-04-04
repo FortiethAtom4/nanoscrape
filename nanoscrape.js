@@ -1,5 +1,6 @@
 const puppeteer = require('puppeteer');
 const fs = require("fs");
+const prompt = require("prompt-sync")();
 
 if(process.argv.length < 3 || process.argv.length > 6){
     console.log("Usage: node nanoscrape.js [link to chapter] [(optional) timeout] [(optional) headless] [(optional) path]");
@@ -25,6 +26,12 @@ async function waitForPageLoad(page,timeout,selector){
         page.waitForSelector(selector).then(() => (console.log("-> Page image elements detected."))),
         page.waitForNetworkIdle({ idleTime: timeout }).then(() => (console.log("-> Network idle timeout reached.")))
     ]).then(() => (console.log("Page elements loaded, proceeding with scraping...")));
+}
+
+async function waitForPageLoad(page,selector){
+    console.log("Waiting for page elements to load...");
+    await page.waitForSelector(selector).then(() => (console.log("-> Page image elements detected.")))
+    .then(() => (console.log("Page elements loaded, proceeding with scraping...")));
 }
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -110,14 +117,30 @@ let directoryname; //these will be initialized on a successful scrape.
 
             case "tonarinoyj.jp":
             case "shonenjumpplus.com":
+
+                if(await page.$(".rental-button")){
+                    console.log("This chapter requires a login and rental to scrape.");
+                    console.log("**Note: Be sure the chapter is rented on the logged-in account before scraping.**");
+                    await page.click(".rental-button");
+                    let user = prompt("Username: ");
+                    let pw = prompt("Password: ");
+                    await page.type("div.setting-inner:nth-child(3) > form:nth-child(1) > p:nth-child(4) > input:nth-child(1)",user);
+                    await page.type("div.setting-inner:nth-child(3) > form:nth-child(1) > p:nth-child(5) > input:nth-child(1)",pw);
+                    await Promise.all([
+                        page.waitForNavigation({ waitUntil: 'networkidle0' }),
+                        page.click("div.setting-inner:nth-child(3) > form:nth-child(1) > div:nth-child(7) > button:nth-child(1)")
+                    ]); 
+                }
                 //class of next-page button: "page-navigation-forward rtl js-slide-forward"
-                await waitForPageLoad(page,timeout,".page-image");
+                await waitForPageLoad(page,".page-image");
                 console.log("This site dynamically loads images. Beginning page click simulation...");
+                console.log("WARNING: this can take some time, depending on chapter length.");
 
                 issueSrcs = new Set();
                 let prevLength = -1;
 
-                //Gets canvas Data URL links. Because of the potential to accidentally grab copies of the same URL
+
+                //Gets canvas Data URL links. Because of this algorithm's potential to accidentally grab copies of the same URL
                 //due to this website's dynamic load/offload nature, a Set data object is necessary.
                 while(prevLength != Array.from(issueSrcs).length){
 
@@ -135,11 +158,12 @@ let directoryname; //these will be initialized on a successful scrape.
                     for(let i = 0; i < pageChunk.length; i++){
                         issueSrcs.add(pageChunk[i]);
                     }
-                    //This simulates clicking further into the chapter, which causes more pages to load.
 
+                    //simulates clicking forward a few pages with a slight pause in between each click.
+                    //this will cause the page to load more images in, which can then be scraped.
                     for(let i = 0; i < 4; i++){
                         await page.click(".page-navigation-forward")
-                        .then(() => (sleep(250))); //simulates clicking forward a few pages with a slight pause in between each click.
+                        .then(() => (sleep(250))); 
                     }
                     await page.waitForNetworkIdle({idleTime: timeout});
                     
