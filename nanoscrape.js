@@ -1,5 +1,6 @@
 const puppeteer = require('puppeteer');
 const fs = require("fs");
+const { time } = require('console');
 const prompt = require("prompt-sync")();
 
 if(process.argv.length < 3 || process.argv.length > 6){
@@ -126,10 +127,9 @@ let directoryname; //these will be initialized on a successful scrape.
                     let pw = prompt("Password: ");
                     await page.type("div.setting-inner:nth-child(3) > form:nth-child(1) > p:nth-child(4) > input:nth-child(1)",user);
                     await page.type("div.setting-inner:nth-child(3) > form:nth-child(1) > p:nth-child(5) > input:nth-child(1)",pw);
-                    await Promise.all([
-                        page.waitForNavigation({ waitUntil: 'networkidle0' }),
-                        page.click("div.setting-inner:nth-child(3) > form:nth-child(1) > div:nth-child(7) > button:nth-child(1)")
-                    ]); 
+
+                    await page.click("div.setting-inner:nth-child(3) > form:nth-child(1) > div:nth-child(7) > button:nth-child(1)");
+
                 }
                 //class of next-page button: "page-navigation-forward rtl js-slide-forward"
                 await waitForPageLoad(page,".page-image");
@@ -138,7 +138,6 @@ let directoryname; //these will be initialized on a successful scrape.
 
                 issueSrcs = new Set();
                 let prevLength = -1;
-
 
                 //Gets canvas Data URL links. Because of this algorithm's potential to accidentally grab copies of the same URL
                 //due to this website's dynamic load/offload nature, a Set data object is necessary.
@@ -165,7 +164,11 @@ let directoryname; //these will be initialized on a successful scrape.
                         await page.click(".page-navigation-forward")
                         .then(() => (sleep(250))); 
                     }
-                    await page.waitForNetworkIdle({idleTime: timeout});
+
+                    //This is a terrible temporary solution. But until I fix the bug with page navigation and waiting for idle network, this will have to do.
+                    await sleep(timeout);
+                    // await page.waitForNetworkIdle({idleTime: timeout});
+
                     
                     console.log(`-> Got ${Array.from(issueSrcs).length - prevLength} images. Total: ${Array.from(issueSrcs).length}`)
 
