@@ -1,6 +1,7 @@
 const puppeteer = require('puppeteer');
 const fs = require("fs");
 const { parse } = require('path');
+const { time } = require('console');
 const prompt = require("prompt-sync")();
 
 if(process.argv.length < 3 || process.argv.length > 6){
@@ -50,8 +51,7 @@ let dataSaveFunction;
 let directoryname; //these will be initialized on a successful scrape.
 let prevLength = -1;
 
-let canvas_selector; //selectors for the dynamic-page load strategy.
-let navigation_selector;
+
 
 (async () => {
     // Launch the browser
@@ -89,9 +89,14 @@ let navigation_selector;
         //perform different processes depending on the manga site given:
         switch(host){
 
+            //all three of my main scraping sites now use the same page load strategy. Weird.
             case "ciao.shogakukan.co.jp":
             case "tonarinoyj.jp":
             case "shonenjumpplus.com":
+
+                //selectors for the dynamic-page load strategy.
+                let canvas_selector;
+                let navigation_selector;
 
                 if(host == "ciao.shogakukan.co.jp"){
                     canvas_selector = ".c-viewer__comic";
@@ -142,17 +147,18 @@ let navigation_selector;
 
                     //simulates clicking forward a few pages with a slight pause in between each click.
                     //this will cause the page to load more images in, which can then be scraped.
+
+                    //NOTE: there is a bug where the scraper sometimes scrapes more than its assigned chapter due to this loop. 
+                    //page.url() should deal with the majority of these occurrences, but it could still happen. 
                     for(let i = 0; i < 4; i++){
-                        if(await page.$(navigation_selector) !== null){
+                        if(await page.$(navigation_selector) !== null && page.url() == process.argv[2]){
                             await page.click(navigation_selector)
                             .then(() => (sleep(250))); 
                         }
                     }
 
-                    //This is a terrible temporary solution. But until I fix the bug with page navigation and waiting for idle network, this will have to do.
-                    // page.screenshot({path: "test.png"});
-                    await sleep(timeout);
-                    // await page.waitForNetworkIdle({idleTime: timeout});
+                    //Another buffer to make sure the network loads. Might be overkill, but better than missing pages.
+                    await page.waitForNetworkIdle(timeout);
 
                     
                     console.log(`-> Got ${Array.from(issueSrcs).length - prevLength} images. Total: ${Array.from(issueSrcs).length}`)
