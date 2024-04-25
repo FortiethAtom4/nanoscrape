@@ -1,6 +1,6 @@
 const puppeteer = require('puppeteer');
 const fs = require("fs");
-const { time } = require('console');
+const { parse } = require('path');
 const prompt = require("prompt-sync")();
 
 if(process.argv.length < 3 || process.argv.length > 6){
@@ -48,6 +48,10 @@ const parseDataUrl = (dataUrl) => {
 
 let dataSaveFunction;
 let directoryname; //these will be initialized on a successful scrape.
+let prevLength = -1;
+
+let canvas_selector; //selectors for the dynamic-page load strategy.
+let navigation_selector;
 
 (async () => {
     // Launch the browser
@@ -84,40 +88,18 @@ let directoryname; //these will be initialized on a successful scrape.
 
         //perform different processes depending on the manga site given:
         switch(host){
+
             case "ciao.shogakukan.co.jp":
-                
-                //class selector for div with child image element: 'c-viewer__comic'
-
-                await waitForPageLoad(page,timeout,".c-viewer__comic");
-
-                //gets links to blob object URLs.
-                issueSrcs = await page.evaluate(() => {
-                    const srcs = document.querySelectorAll(".c-viewer__comic");
-                    let imglinks = [];
-                    for(let i = 0; i < srcs.length; i++){
-                        let thing = srcs[i].innerHTML;
-                        let attempt = thing.substring(thing.search("src="));
-                        attempt = attempt.match("\".*\"");
-                        //this is dumb, but it IS getting the temp link to the image, so...
-                        attempt = attempt.toString().replaceAll("\"","").split(" ")[0];
-        
-                        imglinks.push(attempt);
-                    }
-                    return imglinks;
-                });
-
-
-                dataSaveFunction = async (directoryname) => {
-                    for (let i = 0; i < issueSrcs.length; i++) {
-                        const viewSource = await page.goto(issueSrcs[i]);
-                        await fs.writeFile(directoryname + `/page_${i + 1}.png`, await viewSource.buffer(), () => console.log(`-> Page #${i + 1} downloaded.`));
-                    }
-                    return
-                }
-                break
-
             case "tonarinoyj.jp":
             case "shonenjumpplus.com":
+
+                if(host == "ciao.shogakukan.co.jp"){
+                    canvas_selector = ".c-viewer__comic";
+                    navigation_selector = ".c-viewer__pager-next";
+                }else{
+                    canvas_selector = ".page-image";
+                    navigation_selector = ".page-navigation-forward";
+                }
 
                 if(await page.$(".rental-button")){
                     console.log("This chapter requires a login and rental to scrape.");
@@ -132,12 +114,12 @@ let directoryname; //these will be initialized on a successful scrape.
 
                 }
                 //class of next-page button: "page-navigation-forward rtl js-slide-forward"
-                await waitForPageLoadAlt(page,".page-image");
+                await waitForPageLoadAlt(page,canvas_selector);
                 console.log("This site dynamically loads images. Beginning page click simulation...");
                 console.log("WARNING: this can take some time, depending on chapter length.");
 
                 issueSrcs = new Set();
-                let prevLength = -1;
+                prevLength = -1;
 
                 //Gets canvas Data URL links. Because of this algorithm's potential to accidentally grab copies of the same URL
                 //due to the website's dynamic load/offload nature, a Set data object is necessary.
@@ -161,11 +143,14 @@ let directoryname; //these will be initialized on a successful scrape.
                     //simulates clicking forward a few pages with a slight pause in between each click.
                     //this will cause the page to load more images in, which can then be scraped.
                     for(let i = 0; i < 4; i++){
-                        await page.click(".page-navigation-forward")
-                        .then(() => (sleep(250))); 
+                        if(await page.$(navigation_selector) !== null){
+                            await page.click(navigation_selector)
+                            .then(() => (sleep(250))); 
+                        }
                     }
 
                     //This is a terrible temporary solution. But until I fix the bug with page navigation and waiting for idle network, this will have to do.
+                    // page.screenshot({path: "test.png"});
                     await sleep(timeout);
                     // await page.waitForNetworkIdle({idleTime: timeout});
 
@@ -188,9 +173,37 @@ let directoryname; //these will be initialized on a successful scrape.
                 break
 
             case "www.s-manga.net":
-                console.log("Not yet available. Coming soon");
-                return
-                //break
+
+                await waitForPageLoad(page,timeout,"#content");
+                //get the thirds of an image to splice together.
+                let pageTest = await page.evaluate(async () => {
+                    let retarr = [];
+                    retarr.push(document.querySelector("#content-p1 > div:nth-child(1) > div:nth-child(1) > img:nth-child(1)"));
+                    retarr.push(document.querySelector("#content-p1 > div:nth-child(1) > div:nth-child(2) > img:nth-child(1)"));
+                    retarr.push(document.querySelector("#content-p1 > div:nth-child(1) > div:nth-child(3) > img:nth-child(1)"));
+                    return retarr;
+                });
+                console.log("-> Page acquired.")
+                console.log(pageTest[0]);
+                dataSaveFunction = (directoryname) => {
+                    const { buffer1 } = parseDataUrl(pageTest[0]);
+                    const { buffer2 } = parseDataUrl(pageTest[1]);
+                    const { buffer3 } = parseDataUrl(pageTest[2]);
+
+                    fs.writeFileSync(`${directoryname}/page_1.png`, buffer1, 'base64');
+                    fs.writeFileSync(`${directoryname}/page_1.png`, buffer2, 'base64');
+                    fs.writeFileSync(`${directoryname}/page_1.png`, buffer3, 'base64');
+
+                    console.log("-> File written to " + directoryname);
+                }
+
+
+
+
+                // console.log("Not yet available. Coming soon");
+
+                // return
+                break
 
             default:
                 throw new Error(`Given URL "${process.argv[2]}" is not a recognized URL for manga scraping.`);
