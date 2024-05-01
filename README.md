@@ -6,7 +6,16 @@ Made by Zirconium (@FortiethAtom4 on Github)
 
 # HOW TO USE THIS SCRAPER
 
-1. Get a link to the chapter on either Ciao, Shounen Jump Plus, or Tonari no Young Jump.
+1. Get a link to the chapter from any of the sites nanoscrape recognizes.
+Full list of recognized domains:
+- ciao.shogakukan.co.jp
+- tonarinoyj.jp
+- shonenjumpplus.com
+- pocket.shonenmagazine.com
+
+This list will continue to increase; nanoscrape is in continuous development with the goal to be
+able to recognize and scrape from as many manga sites as possible.
+
 - Example test links:
     - from Ciao: https://ciao.shogakukan.co.jp/comics/title/00511/episode/9255 (NekoMeru Chapter 5)
     - from Young Jump: https://tonarinoyj.jp/episode/4856001361151760115 (Love Agency Chapter 1)
