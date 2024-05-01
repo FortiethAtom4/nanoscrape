@@ -89,15 +89,17 @@ let prevLength = -1;
         //perform different processes depending on the manga site given:
         switch(host){
 
-            //all three of my main scraping sites now use the same page load strategy. Weird.
+            //as of 4/25/2024 all three of my main scraping sites now use the same page load strategy. Weird.
             case "ciao.shogakukan.co.jp":
             case "tonarinoyj.jp":
             case "shonenjumpplus.com":
+            case "pocket.shonenmagazine.com":
 
                 //selectors for the dynamic-page load strategy.
                 let canvas_selector;
                 let navigation_selector;
 
+                //Selectors for each site. 
                 if(host == "ciao.shogakukan.co.jp"){
                     canvas_selector = ".c-viewer__comic";
                     navigation_selector = ".c-viewer__pager-next";
@@ -106,6 +108,8 @@ let prevLength = -1;
                     navigation_selector = ".page-navigation-forward";
                 }
 
+                //Dialogue to use login information to get to a page.
+                //Pages appear normally once logged in (if the chapter is paid for).
                 if(await page.$(".rental-button")){
                     console.log("This chapter requires a login and rental to scrape.");
                     console.log("**Note: Be sure the chapter is rented on the logged-in account before scraping.**");
@@ -149,7 +153,7 @@ let prevLength = -1;
                     //this will cause the page to load more images in, which can then be scraped.
 
                     //NOTE: there is a bug where the scraper sometimes scrapes more than its assigned chapter due to this loop. 
-                    //page.url() should deal with the majority of these occurrences, but it could still happen. 
+                    //the page.url() condition should deal with the majority of these occurrences, but it could still happen. 
                     for(let i = 0; i < 4; i++){
                         if(await page.$(navigation_selector) !== null && page.url() == process.argv[2]){
                             await page.click(navigation_selector)
@@ -166,10 +170,10 @@ let prevLength = -1;
                     
                 }
 
+                //parse and save the data from the images' data URLs.
                 dataSaveFunction = (directoryname) => {
                     issueSrcs = Array.from(issueSrcs);
                     for (let i = 0; i < issueSrcs.length; i++) {
-                        // await page.goto(issueSrcs[i],{waitUntil: 'domcontentloaded'});
                         const { buffer } = parseDataUrl(issueSrcs[i]);
                         fs.writeFileSync(`${directoryname}/page_${i + 1}.png`, buffer, 'base64');
                         console.log(`-> Page #${i + 1} downloaded.`);
@@ -183,11 +187,11 @@ let prevLength = -1;
                 await waitForPageLoad(page,timeout,"#content");
                 //get the thirds of an image to splice together.
                 let pageTest = await page.evaluate(async () => {
-                    let retarr = [];
+                    let retarr = []; //not intentional.
                     retarr.push(document.querySelector("#content-p1 > div:nth-child(1) > div:nth-child(1) > img:nth-child(1)"));
                     retarr.push(document.querySelector("#content-p1 > div:nth-child(1) > div:nth-child(2) > img:nth-child(1)"));
                     retarr.push(document.querySelector("#content-p1 > div:nth-child(1) > div:nth-child(3) > img:nth-child(1)"));
-                    return retarr;
+                    return retarr; 
                 });
                 console.log("-> Page acquired.")
                 console.log(pageTest[0]);
