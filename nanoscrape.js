@@ -156,8 +156,8 @@ let prevLength = -1;
                     //the page.url() condition should deal with the majority of these occurrences, but it could still happen. 
                     if(await page.$(navigation_selector) !== null && page.url() == process.argv[2]){
                         await page.click(navigation_selector)
-                        .then(() => (sleep(250)));
-                        await page.click(navigation_selector)
+                        .then(() => (sleep(250)))
+                        .then(() => (page.click(navigation_selector)))
                         .then(() => (sleep(250))); 
                         //going 4 pages in, easier to just type out twice rather than make a loop of 2 
                     }
