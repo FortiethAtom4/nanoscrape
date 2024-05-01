@@ -149,16 +149,17 @@ let prevLength = -1;
                         issueSrcs.add(pageChunk[i]);
                     }
 
-                    //simulates clicking forward a few pages with a slight pause in between each click.
+                    //simulates clicking forward with a slight pause in between each click.
                     //this will cause the page to load more images in, which can then be scraped.
 
                     //NOTE: there is a bug where the scraper sometimes scrapes more than its assigned chapter due to this loop. 
                     //the page.url() condition should deal with the majority of these occurrences, but it could still happen. 
-                    for(let i = 0; i < 4; i++){
-                        if(await page.$(navigation_selector) !== null && page.url() == process.argv[2]){
-                            await page.click(navigation_selector)
-                            .then(() => (sleep(250))); 
-                        }
+                    if(await page.$(navigation_selector) !== null && page.url() == process.argv[2]){
+                        await page.click(navigation_selector)
+                        .then(() => (sleep(250)));
+                        await page.click(navigation_selector)
+                        .then(() => (sleep(250))); 
+                        //going 4 pages in, easier to just type out twice rather than make a loop of 2 
                     }
 
                     //Another buffer to make sure the network loads. Might be overkill, but better than missing pages.
