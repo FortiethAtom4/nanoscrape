@@ -51,6 +51,20 @@ let dataSaveFunction;
 let directoryname; //these will be initialized on a successful scrape.
 let prevLength = -1;
 
+async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSelector){
+    console.log("This chapter requires a login and rental to scrape.");
+    console.log("**Note: Be sure the chapter is rented on the logged-in account before scraping.**");
+    await page.click(buttonSelector);
+    let user = prompt("Username: ");
+    let pw = prompt("Password: ",{echo:"*"});
+    await page.type(userSelector,user)
+    .then(() => (page.type(pwSelector,pw)))
+    await Promise.all([
+        page.waitForNavigation(),
+        page.click(enterInfoSelector)
+      ]);
+    console.log("Credentials entered.");
+}
 
 
 (async () => {
@@ -107,21 +121,29 @@ let prevLength = -1;
                     canvas_selector = ".page-image";
                     navigation_selector = ".page-navigation-forward";
                 }
-
+                
                 //Dialogue to use login information to get to a page.
                 //Pages appear normally once logged in (if the chapter is paid for).
-                if(await page.$(".rental-button")){
-                    console.log("This chapter requires a login and rental to scrape.");
-                    console.log("**Note: Be sure the chapter is rented on the logged-in account before scraping.**");
-                    await page.click(".rental-button");
-                    let user = prompt("Username: ");
-                    let pw = prompt("Password: ");
-                    await page.type("div.setting-inner:nth-child(3) > form:nth-child(1) > p:nth-child(4) > input:nth-child(1)",user);
-                    await page.type("div.setting-inner:nth-child(3) > form:nth-child(1) > p:nth-child(5) > input:nth-child(1)",pw);
+                if(await page.$(".read-button")){
+                    await sleep(timeout);
+                    await doLogin(page,".read-button",
+                "div.js-show-for-guest > form:nth-child(1) > p:nth-child(4) > input:nth-child(1)",
+                "div.js-show-for-guest > form:nth-child(1) > p:nth-child(5) > input:nth-child(1)",
+                "div.common-button-container:nth-child(7) > button:nth-child(1)");
+                }
 
-                    await page.click("div.setting-inner:nth-child(3) > form:nth-child(1) > div:nth-child(7) > button:nth-child(1)");
+                if(await page.$(".rental-button")){
+                    await sleep(timeout);
+                    await doLogin(page,".rental-button",
+                    "div.setting-inner:nth-child(3) > form:nth-child(1) > p:nth-child(4) > input:nth-child(1)",
+                    "div.setting-inner:nth-child(3) > form:nth-child(1) > p:nth-child(5) > input:nth-child(1)",
+                    "div.setting-inner:nth-child(3) > form:nth-child(1) > div:nth-child(7) > button:nth-child(1)");
 
                 }
+
+                
+
+
                 //class of next-page button: "page-navigation-forward rtl js-slide-forward"
                 await waitForPageLoadAlt(page,canvas_selector);
                 console.log("This site dynamically loads images. Beginning page click simulation...");
@@ -129,14 +151,12 @@ let prevLength = -1;
 
                 issueSrcs = new Set();
                 prevLength = -1;
-
                 //Gets canvas Data URL links. Because of this algorithm's potential to accidentally grab copies of the same URL
                 //due to the website's dynamic load/offload nature, a Set data object is necessary.
                 while(prevLength != Array.from(issueSrcs).length){
-
                     prevLength = Array.from(issueSrcs).length;
 
-                    let pageChunk = await page.evaluate(async () => {
+                    let pageChunk = await page.evaluate(() => {
                         let canvases = document.getElementsByTagName("canvas");
                         let canvasdata = [];
                         for(let i = 0; i < canvases.length; i++){
@@ -157,8 +177,6 @@ let prevLength = -1;
                     if(await page.$(navigation_selector) !== null && page.url() == process.argv[2]){
                         await page.click(navigation_selector)
                         .then(() => (sleep(250)))
-                        .then(() => (page.click(navigation_selector)))
-                        .then(() => (sleep(250))); 
                         //going 4 pages in, easier to just type out twice rather than make a loop of 2 
                     }
 
