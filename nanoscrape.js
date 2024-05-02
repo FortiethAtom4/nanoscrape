@@ -2,6 +2,7 @@ const puppeteer = require('puppeteer-extra')
 const StealthPlugin = require('puppeteer-extra-plugin-stealth')
 puppeteer.use(StealthPlugin()) //to avoid typical forms of bot detection
 const fs = require("fs");
+const { time } = require('console');
 const prompt = require("prompt-sync")();
 
 if(process.argv.length < 3 || process.argv.length > 6){
@@ -61,7 +62,7 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
     .then(() => (page.type(pwSelector,pw)))
     await Promise.all([
         await page.click(enterInfoSelector),
-        await page.waitForNavigation()
+        await page.waitForNavigation({timeout: 60000})
     ])
     
     console.log("Credentials entered.");
@@ -79,10 +80,10 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
     if(process.argv[4] == 'false'){
         headoption = false;
     }
-    const browser = await puppeteer.launch(  { args: ['--disable-web-security','--disable-background-timer-throttling' ], headless: headoption });
+    const browser = await puppeteer.launch(  { args: ['--disable-web-security' ], headless: headoption });
     try {
         //Open a new page
-        const page = await browser.newPage();
+        const page = (await browser.pages())[0];
         let link = process.argv[2];
 
         let timeout = 1000;
@@ -156,25 +157,36 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
                 console.log("WARNING: this can take some time, depending on chapter length.");
 
                 issueSrcs = new Set();
+                
+                //To be implemented in a future update.
+                // prevLength = await page.evaluate(() => {
+                //     let numImgs = document.querySelectorAll("p, .page-area");
+                //     return numImgs;
+                // });
+                // console.log(prevLength);
                 prevLength = -1;
+                page.on('console', (msg) => {console.log(msg.text())}) //for testing only
+
                 //Gets canvas Data URL links. Because of this algorithm's potential to accidentally grab copies of the same URL
                 //due to the website's dynamic load/offload nature, a Set data object is necessary.
                 while(prevLength != Array.from(issueSrcs).length){
                     prevLength = Array.from(issueSrcs).length;
-
+                    
                     let pageChunk = await page.evaluate(() => {
                         let canvases = document.getElementsByTagName("canvas");
+
                         let canvasdata = [];
                         for(let i = 0; i < canvases.length; i++){
                             canvasdata.push(canvases[i].toDataURL());
-                        }
-                        return canvasdata;
-                    });
 
+                        }
+
+                        return canvasdata;
+                        
+                    });
                     for(let i = 0; i < pageChunk.length; i++){
                         issueSrcs.add(pageChunk[i]);
                     }
-
                     //simulates clicking forward with a slight pause in between each click.
                     //this will cause the page to load more images in, which can then be scraped.
 
@@ -183,12 +195,10 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
                     if(await page.$(navigation_selector) !== null && page.url() == process.argv[2]){
                         await page.click(navigation_selector)
                         .then(() => (sleep(250)))
-                        //going 4 pages in, easier to just type out twice rather than make a loop of 2 
                     }
 
-                    //Another buffer to make sure the network loads. Might be overkill, but better than missing pages.
-                    await page.waitForNetworkIdle(timeout);
-
+                    //For some reason, this line bugs the program out after an automated login. No idea why. Need a workaround.
+                    await page.waitForNetworkIdle();
                     
                     console.log(`-> Got ${Array.from(issueSrcs).length - prevLength} images. Total: ${Array.from(issueSrcs).length}`)
 
