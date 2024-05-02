@@ -1,7 +1,7 @@
-const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer-extra')
+const StealthPlugin = require('puppeteer-extra-plugin-stealth')
+puppeteer.use(StealthPlugin()) //to avoid typical forms of bot detection
 const fs = require("fs");
-const { parse } = require('path');
-const { time } = require('console');
 const prompt = require("prompt-sync")();
 
 if(process.argv.length < 3 || process.argv.length > 6){
@@ -60,10 +60,16 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
     await page.type(userSelector,user)
     .then(() => (page.type(pwSelector,pw)))
     await Promise.all([
-        page.waitForNavigation(),
-        page.click(enterInfoSelector)
-      ]);
+        await page.click(enterInfoSelector),
+        await page.waitForNavigation()
+    ])
+    
     console.log("Credentials entered.");
+    // while(await page.$(".js-login-error-message") != null) {
+    //     console.log("Login failed, please try again.")
+    //     await doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSelector);
+    // }
+
 }
 
 
@@ -73,7 +79,7 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
     if(process.argv[4] == 'false'){
         headoption = false;
     }
-    const browser = await puppeteer.launch(  { args: ['--disable-web-security' ], headless: headoption });
+    const browser = await puppeteer.launch(  { args: ['--disable-web-security','--disable-background-timer-throttling' ], headless: headoption });
     try {
         //Open a new page
         const page = await browser.newPage();
