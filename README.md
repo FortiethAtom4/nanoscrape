@@ -60,6 +60,11 @@ Examples:
 `node nanoscrape.js [URL] 1000 true path/to/my/folder`
 `note nanoscrape.js [URL] 1000 true "folder name with spaces"`
 
-
-
 # ENJOY
+
+----
+
+# PATCH NOTES
+
+5/5/2024 - Optimized scrape strategy and changed loop condition to check page URL, finally killing the extra-image bug.
+WARNING: There is a bug with automated logins which causes the scraper to time out after the page loads. Do not use automated logins for pocket.shonenmagazine.com for the time being.

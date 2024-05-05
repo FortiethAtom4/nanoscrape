@@ -110,7 +110,7 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
         //perform different processes depending on the manga site given:
         switch(host){
 
-            //as of 4/25/2024 all three of my main scraping sites now use the same page load strategy. Weird.
+            //as of 4/25/2024 all four of my main scraping sites now use the same page load strategy. Weird.
             case "ciao.shogakukan.co.jp":
             case "tonarinoyj.jp":
             case "shonenjumpplus.com":
@@ -194,6 +194,7 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
                     
                     
                     console.log(`-> Temp stored ${Array.from(issueSrcs).length - prevLength} images. Total unique pages: ${Array.from(issueSrcs).length}`);
+                    
                     //For some reason, this line bugs the program out after an automated login. No idea why. Need a workaround.
                     await page.waitForNetworkIdle(timeout);
                 }
