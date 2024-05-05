@@ -164,21 +164,16 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
                 //     return numImgs;
                 // });
                 // console.log(prevLength);
-                prevLength = -1;
                 page.on('console', (msg) => {console.log(msg.text())}) //for testing only
-
                 //Gets canvas Data URL links. Because of this algorithm's potential to accidentally grab copies of the same URL
                 //due to the website's dynamic load/offload nature, a Set data object is necessary.
-                while(prevLength != Array.from(issueSrcs).length){
-                    prevLength = Array.from(issueSrcs).length;
-                    
+                while(page.url() == process.argv[2]){
                     let pageChunk = await page.evaluate(() => {
                         let canvases = document.getElementsByTagName("canvas");
 
                         let canvasdata = [];
                         for(let i = 0; i < canvases.length; i++){
                             canvasdata.push(canvases[i].toDataURL());
-
                         }
 
                         return canvasdata;
@@ -196,13 +191,11 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
                         await page.click(navigation_selector)
                         .then(() => (sleep(250)))
                     }
-
+                    
+                    
+                    console.log(`-> Temp stored ${Array.from(issueSrcs).length - prevLength} images. Total unique pages: ${Array.from(issueSrcs).length}`);
                     //For some reason, this line bugs the program out after an automated login. No idea why. Need a workaround.
-                    await page.waitForNetworkIdle();
-                    
-                    console.log(`-> Got ${Array.from(issueSrcs).length - prevLength} images. Total: ${Array.from(issueSrcs).length}`)
-
-                    
+                    await page.waitForNetworkIdle(timeout);
                 }
 
                 //parse and save the data from the images' data URLs.
