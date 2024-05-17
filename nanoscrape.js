@@ -2,7 +2,6 @@ const puppeteer = require('puppeteer-extra')
 const StealthPlugin = require('puppeteer-extra-plugin-stealth')
 puppeteer.use(StealthPlugin()) //to avoid typical forms of bot detection
 const fs = require("fs");
-const { time } = require('console');
 const prompt = require("prompt-sync")();
 
 if(process.argv.length < 3 || process.argv.length > 6){
@@ -20,6 +19,9 @@ if(process.argv.length < 3 || process.argv.length > 6){
 
 //working on: Young Jump
 //test link: https://www.s-manga.net/reader/main.php?cid=9784088931678 (some baseball manga i forget the name)
+
+
+//TODO: Load a dummy session on each site. Get cookies related to the site and save them. Use those cookies for future scrape attempts.
 
 //waits a set amount of network idle time before beginning scraping, default 1 second (1000 milliseconds). 
 //This is to allow the many images to load to the page, which typically takes a bit.
@@ -80,7 +82,7 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
     if(process.argv[4] == 'false'){
         headoption = false;
     }
-    const browser = await puppeteer.launch(  { args: ['--disable-web-security' ], headless: headoption });
+    const browser = await puppeteer.launch(  { product: 'chrome', args: ['--disable-web-security' ], headless: headoption });
     try {
         //Open a new page
         const page = (await browser.pages())[0];
@@ -194,7 +196,7 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
                     
                     
                     console.log(`-> Temp stored ${Array.from(issueSrcs).length - prevLength} images. Total unique pages: ${Array.from(issueSrcs).length}`);
-                    
+
                     //For some reason, this line bugs the program out after an automated login. No idea why. Need a workaround.
                     await page.waitForNetworkIdle(timeout);
                 }
@@ -236,10 +238,7 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
                     console.log("-> File written to " + directoryname);
                 }
 
-
-
-
-                // console.log("Not yet available. Coming soon");
+                console.log("Not yet available. Coming soon");
 
                 // return
                 break
