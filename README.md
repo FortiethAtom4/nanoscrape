@@ -70,6 +70,7 @@ Examples: \
 - Added random-useragent to the browser session, adding an extra layer of stealth to the scraper.
     - Note: This is not enough to be undetectable. Upcoming updates will continue to prioritize scraper stealth and speed. 
 - Added a try-catch block to main scrape loop to salvage any temp stored images if an error occurs during image collection.
+- Added more print logs to make scraping process more transparent. (I also added a little NANOSCRAPE flair at program start.)
 
 5/5/2024
 - Optimized scrape strategy and changed loop condition to check page URL, finally killing the extra-image bug.
