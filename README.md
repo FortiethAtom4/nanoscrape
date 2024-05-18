@@ -78,5 +78,6 @@ Examples: \
 # BUGS
 
 5/17/2024
+- WARNING: There are new rules about third-party cookies which are being rolled out on Chromium browsers in the near future. This will cause some serious problems for nanoscrape. As it is, the scraper still works, but gets a lot of "third party cookie will be blocked" messages. I'll do what I can to address this issue and hopefully keep the scraper functional after the rule passes.
 - WARNING: There is a bug with automated logins which causes the scraper to time out after the page loads. Do not use automated logins for pocket.shonenmagazine.com for the time being.
 - There is a bug at the end of scraping a chapter where the scraper collects 0 new images a few times before saving them. This is caused by extra pages at the ends of chapters which the scraper ignores but still loops over. This bug is harmless but annoying and will be dealt with in the future.
