@@ -57,7 +57,7 @@ By default, the scraper will automatically generate a name for the image folder.
 *NOTE:* You must also enter a timeout value and a headless value (true or false) when using this command.
 
 Examples:
-`node nanoscrape.js [URL] 1000 true path/to/my/folder`
+`node nanoscrape.js [URL] 1000 true path/to/my/folder`\
 `note nanoscrape.js [URL] 1000 true "folder name with spaces"`
 
 # ENJOY
