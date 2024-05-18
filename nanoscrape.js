@@ -1,6 +1,7 @@
-const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer-extra')
+const StealthPlugin = require('puppeteer-extra-plugin-stealth')
+puppeteer.use(StealthPlugin()) //to avoid typical forms of bot detection
 const fs = require("fs");
-const { time } = require('console');
 const prompt = require("prompt-sync")();
 
 if(process.argv.length < 3 || process.argv.length > 6){
@@ -18,6 +19,9 @@ if(process.argv.length < 3 || process.argv.length > 6){
 
 //working on: Young Jump
 //test link: https://www.s-manga.net/reader/main.php?cid=9784088931678 (some baseball manga i forget the name)
+
+
+//TODO: Load a dummy session on each site. Get cookies related to the site and save them. Use those cookies for future scrape attempts.
 
 //waits a set amount of network idle time before beginning scraping, default 1 second (1000 milliseconds). 
 //This is to allow the many images to load to the page, which typically takes a bit.
@@ -48,6 +52,29 @@ const parseDataUrl = (dataUrl) => {
 
 let dataSaveFunction;
 let directoryname; //these will be initialized on a successful scrape.
+let prevLength = -1;
+
+async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSelector){
+    console.log("This chapter requires a login and rental to scrape.");
+    console.log("**Note: Be sure the chapter is rented on the logged-in account before scraping.**");
+    await page.click(buttonSelector);
+    let user = prompt("Username: ");
+    let pw = prompt("Password: ",{echo:"*"});
+    await page.type(userSelector,user)
+    .then(() => (page.type(pwSelector,pw)))
+    await Promise.all([
+        await page.click(enterInfoSelector),
+        await page.waitForNavigation({timeout: 60000})
+    ])
+    
+    console.log("Credentials entered.");
+    // while(await page.$(".js-login-error-message") != null) {
+    //     console.log("Login failed, please try again.")
+    //     await doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSelector);
+    // }
+
+}
+
 
 (async () => {
     // Launch the browser
@@ -55,10 +82,10 @@ let directoryname; //these will be initialized on a successful scrape.
     if(process.argv[4] == 'false'){
         headoption = false;
     }
-    const browser = await puppeteer.launch(  { args: ['--disable-web-security' ], headless: headoption });
+    const browser = await puppeteer.launch(  { product: 'chrome', args: ['--disable-web-security' ], headless: headoption });
     try {
         //Open a new page
-        const page = await browser.newPage();
+        const page = (await browser.pages())[0];
         let link = process.argv[2];
 
         let timeout = 1000;
@@ -84,101 +111,100 @@ let directoryname; //these will be initialized on a successful scrape.
 
         //perform different processes depending on the manga site given:
         switch(host){
+
+            //as of 4/25/2024 all four of my main scraping sites now use the same page load strategy. Weird.
             case "ciao.shogakukan.co.jp":
-                
-                //class selector for div with child image element: 'c-viewer__comic'
-
-                await waitForPageLoad(page,timeout,".c-viewer__comic");
-
-                //gets links to blob object URLs.
-                issueSrcs = await page.evaluate(() => {
-                    const srcs = document.querySelectorAll(".c-viewer__comic");
-                    let imglinks = [];
-                    for(let i = 0; i < srcs.length; i++){
-                        let thing = srcs[i].innerHTML;
-                        let attempt = thing.substring(thing.search("src="));
-                        attempt = attempt.match("\".*\"");
-                        //this is dumb, but it IS getting the temp link to the image, so...
-                        attempt = attempt.toString().replaceAll("\"","").split(" ")[0];
-        
-                        imglinks.push(attempt);
-                    }
-                    return imglinks;
-                });
-
-
-                dataSaveFunction = async (directoryname) => {
-                    for (let i = 0; i < issueSrcs.length; i++) {
-                        const viewSource = await page.goto(issueSrcs[i]);
-                        await fs.writeFile(directoryname + `/page_${i + 1}.png`, await viewSource.buffer(), () => console.log(`-> Page #${i + 1} downloaded.`));
-                    }
-                    return
-                }
-                break
-
             case "tonarinoyj.jp":
             case "shonenjumpplus.com":
+            case "pocket.shonenmagazine.com":
+
+                //selectors for the dynamic-page load strategy.
+                let canvas_selector;
+                let navigation_selector;
+
+                //Selectors for each site. 
+                if(host == "ciao.shogakukan.co.jp"){
+                    canvas_selector = ".c-viewer__comic";
+                    navigation_selector = ".c-viewer__pager-next";
+                }else{
+                    canvas_selector = ".page-image";
+                    navigation_selector = ".page-navigation-forward";
+                }
+                
+                //Dialogue to use login information to get to a page.
+                //Pages appear normally once logged in (if the chapter is paid for).
+                if(await page.$(".read-button")){
+                    await sleep(timeout);
+                    await doLogin(page,".read-button",
+                "div.js-show-for-guest > form:nth-child(1) > p:nth-child(4) > input:nth-child(1)",
+                "div.js-show-for-guest > form:nth-child(1) > p:nth-child(5) > input:nth-child(1)",
+                "div.common-button-container:nth-child(7) > button:nth-child(1)");
+                }
 
                 if(await page.$(".rental-button")){
-                    console.log("This chapter requires a login and rental to scrape.");
-                    console.log("**Note: Be sure the chapter is rented on the logged-in account before scraping.**");
-                    await page.click(".rental-button");
-                    let user = prompt("Username: ");
-                    let pw = prompt("Password: ");
-                    await page.type("div.setting-inner:nth-child(3) > form:nth-child(1) > p:nth-child(4) > input:nth-child(1)",user);
-                    await page.type("div.setting-inner:nth-child(3) > form:nth-child(1) > p:nth-child(5) > input:nth-child(1)",pw);
-
-                    await page.click("div.setting-inner:nth-child(3) > form:nth-child(1) > div:nth-child(7) > button:nth-child(1)");
+                    await sleep(timeout);
+                    await doLogin(page,".rental-button",
+                    "div.setting-inner:nth-child(3) > form:nth-child(1) > p:nth-child(4) > input:nth-child(1)",
+                    "div.setting-inner:nth-child(3) > form:nth-child(1) > p:nth-child(5) > input:nth-child(1)",
+                    "div.setting-inner:nth-child(3) > form:nth-child(1) > div:nth-child(7) > button:nth-child(1)");
 
                 }
+
+                
+
+
                 //class of next-page button: "page-navigation-forward rtl js-slide-forward"
-                await waitForPageLoadAlt(page,".page-image");
+                await waitForPageLoadAlt(page,canvas_selector);
                 console.log("This site dynamically loads images. Beginning page click simulation...");
                 console.log("WARNING: this can take some time, depending on chapter length.");
 
                 issueSrcs = new Set();
-                let prevLength = -1;
-
+                
+                //To be implemented in a future update.
+                // prevLength = await page.evaluate(() => {
+                //     let numImgs = document.querySelectorAll("p, .page-area");
+                //     return numImgs;
+                // });
+                // console.log(prevLength);
+                page.on('console', (msg) => {console.log(msg.text())}) //for testing only
                 //Gets canvas Data URL links. Because of this algorithm's potential to accidentally grab copies of the same URL
                 //due to the website's dynamic load/offload nature, a Set data object is necessary.
-                while(prevLength != Array.from(issueSrcs).length){
-
-                    prevLength = Array.from(issueSrcs).length;
-
-                    let pageChunk = await page.evaluate(async () => {
+                while(page.url() == process.argv[2]){
+                    let pageChunk = await page.evaluate(() => {
                         let canvases = document.getElementsByTagName("canvas");
+
                         let canvasdata = [];
                         for(let i = 0; i < canvases.length; i++){
                             canvasdata.push(canvases[i].toDataURL());
                         }
-                        return canvasdata;
-                    });
 
+                        return canvasdata;
+                        
+                    });
                     for(let i = 0; i < pageChunk.length; i++){
                         issueSrcs.add(pageChunk[i]);
                     }
-
-                    //simulates clicking forward a few pages with a slight pause in between each click.
+                    //simulates clicking forward with a slight pause in between each click.
                     //this will cause the page to load more images in, which can then be scraped.
-                    for(let i = 0; i < 4; i++){
-                        await page.click(".page-navigation-forward")
-                        .then(() => (sleep(250))); 
+
+                    //NOTE: there is a bug where the scraper sometimes scrapes more than its assigned chapter due to this loop. 
+                    //the page.url() condition should deal with the majority of these occurrences, but it could still happen. 
+                    if(await page.$(navigation_selector) !== null && page.url() == process.argv[2]){
+                        await page.click(navigation_selector)
+                        .then(() => (sleep(250)))
                     }
-
-                    //This is a terrible temporary solution. But until I fix the bug with page navigation and waiting for idle network, this will have to do.
-                    await sleep(timeout);
-                    // await page.waitForNetworkIdle({idleTime: timeout});
-
                     
-                    console.log(`-> Got ${Array.from(issueSrcs).length - prevLength} images. Total: ${Array.from(issueSrcs).length}`)
-
                     
+                    console.log(`-> Temp stored ${Array.from(issueSrcs).length - prevLength} images. Total unique pages: ${Array.from(issueSrcs).length}`);
+
+                    //For some reason, this line bugs the program out after an automated login. No idea why. Need a workaround.
+                    await page.waitForNetworkIdle(timeout);
                 }
 
+                //parse and save the data from the images' data URLs.
                 dataSaveFunction = (directoryname) => {
                     issueSrcs = Array.from(issueSrcs);
                     for (let i = 0; i < issueSrcs.length; i++) {
-                        // await page.goto(issueSrcs[i],{waitUntil: 'domcontentloaded'});
                         const { buffer } = parseDataUrl(issueSrcs[i]);
                         fs.writeFileSync(`${directoryname}/page_${i + 1}.png`, buffer, 'base64');
                         console.log(`-> Page #${i + 1} downloaded.`);
@@ -188,9 +214,34 @@ let directoryname; //these will be initialized on a successful scrape.
                 break
 
             case "www.s-manga.net":
+
+                await waitForPageLoad(page,timeout,"#content");
+                //get the thirds of an image to splice together.
+                let pageTest = await page.evaluate(async () => {
+                    let retarr = []; //not intentional.
+                    retarr.push(document.querySelector("#content-p1 > div:nth-child(1) > div:nth-child(1) > img:nth-child(1)"));
+                    retarr.push(document.querySelector("#content-p1 > div:nth-child(1) > div:nth-child(2) > img:nth-child(1)"));
+                    retarr.push(document.querySelector("#content-p1 > div:nth-child(1) > div:nth-child(3) > img:nth-child(1)"));
+                    return retarr; 
+                });
+                console.log("-> Page acquired.")
+                console.log(pageTest[0]);
+                dataSaveFunction = (directoryname) => {
+                    const { buffer1 } = parseDataUrl(pageTest[0]);
+                    const { buffer2 } = parseDataUrl(pageTest[1]);
+                    const { buffer3 } = parseDataUrl(pageTest[2]);
+
+                    fs.writeFileSync(`${directoryname}/page_1.png`, buffer1, 'base64');
+                    fs.writeFileSync(`${directoryname}/page_1.png`, buffer2, 'base64');
+                    fs.writeFileSync(`${directoryname}/page_1.png`, buffer3, 'base64');
+
+                    console.log("-> File written to " + directoryname);
+                }
+
                 console.log("Not yet available. Coming soon");
-                return
-                //break
+
+                // return
+                break
 
             default:
                 throw new Error(`Given URL "${process.argv[2]}" is not a recognized URL for manga scraping.`);
