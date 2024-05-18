@@ -56,7 +56,7 @@ Example:
 By default, the scraper will automatically generate a name for the image folder. You can override this by adding in a custom name for your folder(s) on the command line. The folder generates from the directory nanoscrape.js is in. Subfolders are permitted, e.g. "folder-1/folder-2". The images will be saved in folder-2, within folder-1. 
 *NOTE:* You must also enter a timeout value and a headless value (true or false) when using this command.
 
-Examples:
+Examples: \
 `node nanoscrape.js [URL] 1000 true path/to/my/folder`\
 `note nanoscrape.js [URL] 1000 true "folder name with spaces"`
 
