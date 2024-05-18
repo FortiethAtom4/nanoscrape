@@ -87,7 +87,8 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
     try {
         console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
         console.log("~~~~~~~~~~NANOSCRAPE~~~~~~~~~~")
-        console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+        console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
+        console.log("nanoscrape version 5/17/2024.")
         //Open a new page
         const page = (await browser.pages())[0];
         let link = process.argv[2];
@@ -190,21 +191,21 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
                             return canvasdata;
                             
                         });
+                        console.log(`-> Found ${pageChunk.length} images.`)
                         for(let i = 0; i < pageChunk.length; i++){
                             issueSrcs.add(pageChunk[i]);
                         }
+                        console.log(`-> Total unique images: ${Array.from(issueSrcs).length}`);
                         //simulates clicking forward with a slight pause in between each click.
                         //this will cause the page to load more images in, which can then be scraped.
-    
-                        //NOTE: there is a bug where the scraper sometimes scrapes more than its assigned chapter due to this loop. 
-                        //the page.url() condition should deal with the majority of these occurrences, but it could still happen. 
+                        console.log("Moving forward a page...")
                         if(await page.$(navigation_selector) !== null && page.url() == process.argv[2]){
                             await page.click(navigation_selector)
                             .then(() => (sleep(250)))
                         }
                         
                         
-                        console.log(`-> Temp stored ${Array.from(issueSrcs).length} images.`);
+                        
     
                         //For some reason, this line bugs the program out after an automated login. No idea why. Need a workaround.
                         await page.waitForNetworkIdle(timeout);
