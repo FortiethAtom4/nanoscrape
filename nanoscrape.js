@@ -1,8 +1,9 @@
-const puppeteer = require('puppeteer-extra')
-const StealthPlugin = require('puppeteer-extra-plugin-stealth')
-puppeteer.use(StealthPlugin()) //to avoid typical forms of bot detection
+const puppeteer = require('puppeteer-extra');
+const StealthPlugin = require('puppeteer-extra-plugin-stealth');
+puppeteer.use(StealthPlugin()); //to avoid typical forms of bot detection - but not enough for everything
 const fs = require("fs");
 const prompt = require("prompt-sync")();
+const randomUA = require("random-useragent");
 
 if(process.argv.length < 3 || process.argv.length > 6){
     console.log("Usage: node nanoscrape.js [link to chapter] [(optional) timeout] [(optional) headless] [(optional) path]");
@@ -93,7 +94,11 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
             timeout = process.argv[3];
         }
 
-
+        //Sets a random user agent for the browser session. 
+        //This line is necessary to bypass some bot detection protocols.
+        let newua = await randomUA.getRandom();
+        console.log(newua)
+        await page.setUserAgent(newua)
 
         
         console.log("Waiting for page load...");
