@@ -10,7 +10,7 @@ if(process.argv.length < 3 || process.argv.length > 6){
 
 //works for: 
 //1. Ciao
-//test link: https://ciao.shogakukan.co.jp/comics/title/00511/episode/9255 (NekoMeru, Chapter 5)
+//test link: https://ciao.shogakukan.co.jp/comics/title/00511/episode/20257 (NekoMeru, Chapter 6)
 //2. Tonari no Young Jump
 //test link: https://tonarinoyj.jp/episode/4856001361151760115 (Renai Daikou, Chapter 1)
 //3. Shounen Jump Plus
