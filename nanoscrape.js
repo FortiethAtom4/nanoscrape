@@ -53,7 +53,6 @@ const parseDataUrl = (dataUrl) => {
 
 let dataSaveFunction;
 let directoryname; //these will be initialized on a successful scrape.
-let prevLength = -1;
 
 async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSelector){
     console.log("This chapter requires a login and rental to scrape.");
@@ -83,8 +82,12 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
     if(process.argv[4] == 'false'){
         headoption = false;
     }
+    // web security must be disabled in order to download from canvas data URLs.
     const browser = await puppeteer.launch(  { product: 'chrome', args: ['--disable-web-security' ], headless: headoption });
     try {
+        console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+        console.log("~~~~~~~~~~NANOSCRAPE~~~~~~~~~~")
+        console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
         //Open a new page
         const page = (await browser.pages())[0];
         let link = process.argv[2];
@@ -97,7 +100,7 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
         //Sets a random user agent for the browser session. 
         //This line is necessary to bypass some bot detection protocols.
         let newua = await randomUA.getRandom();
-        console.log(newua)
+        console.log(`User agent for this session: ${newua}`)
         await page.setUserAgent(newua)
 
         
@@ -175,35 +178,42 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
                 //Gets canvas Data URL links. Because of this algorithm's potential to accidentally grab copies of the same URL
                 //due to the website's dynamic load/offload nature, a Set data object is necessary.
                 while(page.url() == process.argv[2]){
-                    let pageChunk = await page.evaluate(() => {
-                        let canvases = document.getElementsByTagName("canvas");
-
-                        let canvasdata = [];
-                        for(let i = 0; i < canvases.length; i++){
-                            canvasdata.push(canvases[i].toDataURL());
+                    try{
+                        let pageChunk = await page.evaluate(() => {
+                            let canvases = document.getElementsByTagName("canvas");
+    
+                            let canvasdata = [];
+                            for(let i = 0; i < canvases.length; i++){
+                                canvasdata.push(canvases[i].toDataURL());
+                            }
+    
+                            return canvasdata;
+                            
+                        });
+                        for(let i = 0; i < pageChunk.length; i++){
+                            issueSrcs.add(pageChunk[i]);
                         }
-
-                        return canvasdata;
+                        //simulates clicking forward with a slight pause in between each click.
+                        //this will cause the page to load more images in, which can then be scraped.
+    
+                        //NOTE: there is a bug where the scraper sometimes scrapes more than its assigned chapter due to this loop. 
+                        //the page.url() condition should deal with the majority of these occurrences, but it could still happen. 
+                        if(await page.$(navigation_selector) !== null && page.url() == process.argv[2]){
+                            await page.click(navigation_selector)
+                            .then(() => (sleep(250)))
+                        }
                         
-                    });
-                    for(let i = 0; i < pageChunk.length; i++){
-                        issueSrcs.add(pageChunk[i]);
-                    }
-                    //simulates clicking forward with a slight pause in between each click.
-                    //this will cause the page to load more images in, which can then be scraped.
+                        
+                        console.log(`-> Temp stored ${Array.from(issueSrcs).length} images.`);
+    
+                        //For some reason, this line bugs the program out after an automated login. No idea why. Need a workaround.
+                        await page.waitForNetworkIdle(timeout);
 
-                    //NOTE: there is a bug where the scraper sometimes scrapes more than its assigned chapter due to this loop. 
-                    //the page.url() condition should deal with the majority of these occurrences, but it could still happen. 
-                    if(await page.$(navigation_selector) !== null && page.url() == process.argv[2]){
-                        await page.click(navigation_selector)
-                        .then(() => (sleep(250)))
+                    } catch (e){
+                        console.error(`An error occurred during image collection. \nError message:\n${e}\n`);
+                        console.log("Saving temp images and aborting scrape...\n");
+                        break
                     }
-                    
-                    
-                    console.log(`-> Temp stored ${Array.from(issueSrcs).length - prevLength} images. Total unique pages: ${Array.from(issueSrcs).length}`);
-
-                    //For some reason, this line bugs the program out after an automated login. No idea why. Need a workaround.
-                    await page.waitForNetworkIdle(timeout);
                 }
 
                 //parse and save the data from the images' data URLs.

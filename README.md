@@ -6,7 +6,7 @@ Made by Zirconium (@FortiethAtom4 on Github)
 
 # HOW TO USE THIS SCRAPER
 
-1. Get a link to the chapter from any of the sites nanoscrape recognizes.
+1. Get a link to the chapter from any of the sites nanoscrape recognizes. \
 Full list of recognized domains:
 - ciao.shogakukan.co.jp
 - tonarinoyj.jp
@@ -38,21 +38,21 @@ Command: `node nanoscrape.js [URL] [(optional) timeout] [(optional headless)] [(
 
 # OPTIONS
 
-**timeout**
+**timeout** \
 The command waits for the network to be idle before beginning scraping. The default wait time is 1000 milliseconds. You can change this value by adding a number (in milliseconds) to the end of the command. For example, the following will wait for 5000 milliseconds of network idle time instead of 1000 before scraping:
 
 `node nanoscrape.js [URL] 5000`
 
 This is done to ensure all images have loaded before scraping begins. If your computer is slow or your internet connection is choppy, consider using a higher timeout time to compensate. To avoid causing bugs during scraping (i.e. missing pages), I highly recommend not using values lower than 1000 milliseconds.
 
-**headless**
+**headless** \
 By default, the scraper uses a headless browser to get images; that is, it does not visually render the browser while it operates. You can tell the scraper to render the page it is using by adding "false" at the end of the command line.
 *NOTE:* You must also enter a timeout value when using this command.
 
 Example:
 `node nanoscrape.js [URL] 1000 false`
 
-**path**
+**path** \
 By default, the scraper will automatically generate a name for the image folder. You can override this by adding in a custom name for your folder(s) on the command line. The folder generates from the directory nanoscrape.js is in. Subfolders are permitted, e.g. "folder-1/folder-2". The images will be saved in folder-2, within folder-1. 
 *NOTE:* You must also enter a timeout value and a headless value (true or false) when using this command.
 
@@ -66,5 +66,16 @@ Examples:
 
 # PATCH NOTES
 
-5/5/2024 - Optimized scrape strategy and changed loop condition to check page URL, finally killing the extra-image bug.
-WARNING: There is a bug with automated logins which causes the scraper to time out after the page loads. Do not use automated logins for pocket.shonenmagazine.com for the time being.
+5/17/2024
+- Added random-useragent to the browser session, adding an extra layer of stealth to the scraper.
+    - Note: This is not enough to be undetectable. Upcoming updates will continue to prioritize scraper stealth and speed. 
+- Added a try-catch block to main scrape loop to salvage any temp stored images if an error occurs during image collection.
+
+5/5/2024
+- Optimized scrape strategy and changed loop condition to check page URL, finally killing the extra-image bug.
+
+# BUGS
+
+5/17/2024
+- WARNING: There is a bug with automated logins which causes the scraper to time out after the page loads. Do not use automated logins for pocket.shonenmagazine.com for the time being.
+- There is a bug at the end of scraping a chapter where the scraper collects 0 new images a few times before saving them. This is caused by extra pages at the ends of chapters which the scraper ignores but still loops over. This bug is harmless but annoying and will be dealt with in the future.
