@@ -88,7 +88,7 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
         console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
         console.log("~~~~~~~~~~NANOSCRAPE~~~~~~~~~~")
         console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
-        console.log("nanoscrape version 5/17/2024.")
+        console.log("nanoscrape version 5/18/2024.")
         //Open a new page
         const page = (await browser.pages())[0];
         let link = process.argv[2];
@@ -168,7 +168,10 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
                 console.log("WARNING: this can take some time, depending on chapter length.");
 
                 issueSrcs = new Set();
-                
+                //Used to limit image collection retries if e.g. no extra chapter exists for scraper to navigate to.
+                let maxRetries = 5;
+                let curRetries = 0;
+                let prevImgCount = 0;
                 //To be implemented in a future update.
                 // prevLength = await page.evaluate(() => {
                 //     let numImgs = document.querySelectorAll("p, .page-area");
@@ -178,7 +181,7 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
                 page.on('console', (msg) => {console.log(msg.text())}) //for testing only
                 //Gets canvas Data URL links. Because of this algorithm's potential to accidentally grab copies of the same URL
                 //due to the website's dynamic load/offload nature, a Set data object is necessary.
-                while(page.url() == process.argv[2]){
+                while(page.url() == process.argv[2] && curRetries < maxRetries){
                     try{
                         let pageChunk = await page.evaluate(() => {
                             let canvases = document.getElementsByTagName("canvas");
@@ -195,6 +198,11 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
                         for(let i = 0; i < pageChunk.length; i++){
                             issueSrcs.add(pageChunk[i]);
                         }
+                        //Retry getting new images, end scraping if no new images after 5 iterations.
+                        if(Array.from(issueSrcs).length == prevImgCount){
+                            curRetries += 1;
+                        }
+                        prevImgCount = Array.from(issueSrcs).length;
                         console.log(`-> Total unique images: ${Array.from(issueSrcs).length}`);
                         //simulates clicking forward with a slight pause in between each click.
                         //this will cause the page to load more images in, which can then be scraped.

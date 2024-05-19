@@ -62,9 +62,14 @@ Examples: \
 
 # ENJOY
 
-----
+IMPORTANT NOTE: There are new rules about third-party cookies which are being rolled out on Chromium browsers in the near future. This will cause some serious problems for nanoscrape. As it is, the scraper still works but occasionally gets bombarded with "third party cookie will be blocked" messages. I'll do what I can to address this issue and hopefully keep the scraper functional after the rule passes.
 
 # PATCH NOTES
+
+5/18/2024
+- Fixed a bug where the scraper would loop infinitely if a user tried to scrape the most recent chapter of a manga.
+    - Note: This bugfix added new potential functionality to nanoscrape. I intend to update and streamline command-line
+    execution for it soon to allow for more options and features. 
 
 5/17/2024
 - Added random-useragent to the browser session, adding an extra layer of stealth to the scraper.
@@ -77,7 +82,7 @@ Examples: \
 
 # BUGS
 
-5/17/2024
-- WARNING: There are new rules about third-party cookies which are being rolled out on Chromium browsers in the near future. This will cause some serious problems for nanoscrape. As it is, the scraper still works, but gets a lot of "third party cookie will be blocked" messages. I'll do what I can to address this issue and hopefully keep the scraper functional after the rule passes.
+List up to date as of 5/18/2024
 - WARNING: There is a bug with automated logins which causes the scraper to time out after the page loads. Do not use automated logins for pocket.shonenmagazine.com for the time being.
-- There is a bug at the end of scraping a chapter where the scraper collects 0 new images a few times before saving them. This is caused by extra pages at the ends of chapters which the scraper ignores but still loops over. This bug is harmless but annoying and will be dealt with in the future.
+- There is a bug for some sites where the scraper collects a blank image as the first image for the chapter. This can be annoying because it sets the page indexes off by 1, but is otherwise harmless and will be dealt with after the above bug is fixed.
+- There is a bug at the end of scraping a chapter where the scraper collects 0 new images a few times before saving them. This is caused by pages at the ends of chapters which the scraper already collected but still loops over in case it missed any. This bug is harmless but annoying and will be dealt with in the future.
