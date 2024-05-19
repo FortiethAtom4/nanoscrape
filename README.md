@@ -62,7 +62,7 @@ Examples: \
 
 # ENJOY
 
-IMPORTANT NOTE: There are new rules about third-party cookies which are being rolled out on Chromium browsers in the near future. This will cause some serious problems for nanoscrape. As it is, the scraper still works but occasionally gets bombarded with "third party cookie will be blocked" messages. I'll do what I can to address this issue and hopefully keep the scraper functional after the rule passes.
+IMPORTANT NOTE: There are new rules about third-party cookies which are being rolled out on Chrome browsers in the near future. This will cause some serious problems for nanoscrape. As it is, the scraper still works but occasionally gets bombarded with "third party cookie will be blocked" messages. I'll do what I can to address this issue and hopefully keep the scraper functional after the rule passes.
 
 # PATCH NOTES
 
