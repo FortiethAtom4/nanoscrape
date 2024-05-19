@@ -66,6 +66,10 @@ IMPORTANT NOTE: There are new rules about third-party cookies which are being ro
 
 # PATCH NOTES
 
+5/19/2024
+- Relaxed some restrictions on the scraper's waitForNetworkIdle usage, slightly improving scraping speed.
+- Improved logic for directory renaming if a directory of the same name already exists.
+
 5/18/2024
 - Fixed a bug where the scraper would loop infinitely if a user tried to scrape the most recent chapter of a manga.
     - Note: This bugfix added new potential functionality to nanoscrape. I intend to update and streamline command-line
@@ -82,7 +86,7 @@ IMPORTANT NOTE: There are new rules about third-party cookies which are being ro
 
 # BUGS
 
-List up to date as of 5/18/2024
+List up to date as of 5/19/2024
 - WARNING: There is a bug with automated logins which causes the scraper to time out after the page loads. Do not use automated logins for pocket.shonenmagazine.com for the time being.
 - There is a bug for some sites where the scraper collects a blank image as the first image for the chapter. This can be annoying because it sets the page indexes off by 1, but is otherwise harmless and will be dealt with after the above bug is fixed.
 - There is a bug at the end of scraping a chapter where the scraper collects 0 new images a few times before saving them. This is caused by pages at the ends of chapters which the scraper already collected but still loops over in case it missed any. This bug is harmless but annoying and will be dealt with in the future.

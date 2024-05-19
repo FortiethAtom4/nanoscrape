@@ -206,8 +206,8 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
                         console.log(`-> Total unique images: ${Array.from(issueSrcs).length}`);
                         //simulates clicking forward with a slight pause in between each click.
                         //this will cause the page to load more images in, which can then be scraped.
-                        console.log("Moving forward a page...")
-                        if(await page.$(navigation_selector) !== null && page.url() == process.argv[2]){
+                        console.log("Moving forward a page...");
+                        if(await page.$(navigation_selector) !== null){
                             await page.click(navigation_selector)
                             .then(() => (sleep(250)))
                         }
@@ -216,7 +216,7 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
                         
     
                         //For some reason, this line bugs the program out after an automated login. No idea why. Need a workaround.
-                        await page.waitForNetworkIdle(timeout);
+                        await page.waitForNetworkIdle();
 
                     } catch (e){
                         console.error(`An error occurred during image collection. \nError message:\n${e}\n`);
@@ -238,7 +238,6 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
                 break
 
             case "www.s-manga.net":
-
                 await waitForPageLoad(page,timeout,"#content");
                 //get the thirds of an image to splice together.
                 let pageTest = await page.evaluate(async () => {
@@ -273,7 +272,7 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
         
 
         //opens all the URL links and writes the data to png files. Images are saved in a folder in this directory.
-
+        let shift = 0;
         if(!process.argv[5]){
             directoryname = __dirname + "/images_" + await page.evaluate(() => {
                 return window.location.hostname;
@@ -281,11 +280,16 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
         } else{
             directoryname = __dirname + "/" + process.argv[5];
         }
-
-        let shift = 0;
+        //if directory already exists, make a new directory with a slightly altered name
+        if(fs.existsSync(directoryname)){
+            directoryname += "_0";
+        }
         while(fs.existsSync(directoryname)){
             shift += 1;
-            directoryname = directoryname + "_" + shift;
+            for(let i = 0; i < shift; i++){
+                directoryname += "0";
+            }
+            
         }
         console.log("Creating directory...");
         fs.mkdirSync(directoryname, { recursive: true });
