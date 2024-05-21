@@ -72,7 +72,7 @@ IMPORTANT NOTE: There are new rules about third-party cookies which are being ro
 
 5/21/2024
 - Added a proper argument parser, making command-line execution much smoother and simpler. Updated README accordingly.
-- Note: More options will be available in the future, escpecially options related to the browser session (e.g. the user agent).
+    - Note: More options will be available in the future, escpecially options related to the browser session (e.g. the user agent).
 
 5/19/2024
 - Relaxed some restrictions on the scraper's waitForNetworkIdle usage, slightly improving scraping speed.
