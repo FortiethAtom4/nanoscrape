@@ -70,7 +70,7 @@ IMPORTANT NOTE: There are new rules about third-party cookies which are being ro
 
 # PATCH NOTES
 
-5/20/2024
+5/21/2024
 - Added a proper argument parser, making command-line execution much smoother and simpler. Updated README accordingly.
 
 5/19/2024

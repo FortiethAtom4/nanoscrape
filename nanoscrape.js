@@ -96,7 +96,7 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
         console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
         console.log("~~~~~~~~~~NANOSCRAPE~~~~~~~~~~")
         console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
-        console.log("nanoscrape version 5/18/2024.");
+        console.log("nanoscrape version 5/21/2024.");
         //Open a new page
         const page = (await browser.pages())[0];
         let link = args["link_string"];
