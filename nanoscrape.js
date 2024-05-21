@@ -94,7 +94,9 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
         }
 
 
-
+        // will have to do more work here later. Third-party cookie blocking stinks.
+        console.log("Setting user agent...");
+        await page.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36");
         
         console.log("Waiting for page load...");
         await page.goto(link, {
