@@ -82,8 +82,13 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
     if(process.argv[4] == 'false'){
         headoption = false;
     }
+    // web security must be disabled in order to download from canvas data URLs.
     const browser = await puppeteer.launch(  { product: 'chrome', args: ['--disable-web-security' ], headless: headoption });
     try {
+        console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+        console.log("~~~~~~~~~~NANOSCRAPE~~~~~~~~~~")
+        console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
+        console.log("nanoscrape version 5/18/2024.")
         //Open a new page
         const page = (await browser.pages())[0];
         let link = process.argv[2];
@@ -93,10 +98,19 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
             timeout = process.argv[3];
         }
 
+<<<<<<< HEAD
 
         // will have to do more work here later. Third-party cookie blocking stinks.
         console.log("Setting user agent...");
         await page.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36");
+=======
+        //Sets a random user agent for the browser session. 
+        //This line is necessary to bypass some bot detection protocols.
+        let newua = await randomUA.getRandom();
+        console.log(`User agent for this session: ${newua}`)
+        await page.setUserAgent(newua)
+
+>>>>>>> 5f5d5a1b861e90fa7721c673d54ffedd1c57725f
         
         console.log("Waiting for page load...");
         await page.goto(link, {
@@ -161,7 +175,10 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
                 console.log("WARNING: this can take some time, depending on chapter length.");
 
                 issueSrcs = new Set();
-                
+                //Used to limit image collection retries if e.g. no extra chapter exists for scraper to navigate to.
+                let maxRetries = 5;
+                let curRetries = 0;
+                let prevImgCount = 0;
                 //To be implemented in a future update.
                 // prevLength = await page.evaluate(() => {
                 //     let numImgs = document.querySelectorAll("p, .page-area");
@@ -171,7 +188,8 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
                 page.on('console', (msg) => {console.log(msg.text())}) //for testing only
                 //Gets canvas Data URL links. Because of this algorithm's potential to accidentally grab copies of the same URL
                 //due to the website's dynamic load/offload nature, a Set data object is necessary.
-                while(page.url() == process.argv[2]){
+                while(page.url() == process.argv[2] && curRetries < maxRetries){
+                    try{
                     let pageChunk = await page.evaluate(() => {
                         let canvases = document.getElementsByTagName("canvas");
 
@@ -183,24 +201,35 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
                         return canvasdata;
                         
                     });
+                        console.log(`-> Found ${pageChunk.length} images.`)
                     for(let i = 0; i < pageChunk.length; i++){
                         issueSrcs.add(pageChunk[i]);
                     }
+                        //Retry getting new images, end scraping if no new images after 5 iterations.
+                        if(Array.from(issueSrcs).length == prevImgCount){
+                            curRetries += 1;
+                        }
+                        prevImgCount = Array.from(issueSrcs).length;
+                        console.log(`-> Total unique images: ${Array.from(issueSrcs).length}`);
                     //simulates clicking forward with a slight pause in between each click.
                     //this will cause the page to load more images in, which can then be scraped.
-
-                    //NOTE: there is a bug where the scraper sometimes scrapes more than its assigned chapter due to this loop. 
-                    //the page.url() condition should deal with the majority of these occurrences, but it could still happen. 
-                    if(await page.$(navigation_selector) !== null && page.url() == process.argv[2]){
+                        console.log("Moving forward a page...");
+                        if(await page.$(navigation_selector) !== null){
                         await page.click(navigation_selector)
                         .then(() => (sleep(250)))
                     }
                     
                     
-                    console.log(`-> Temp stored ${Array.from(issueSrcs).length - prevLength} images. Total unique pages: ${Array.from(issueSrcs).length}`);
+                        
 
                     //For some reason, this line bugs the program out after an automated login. No idea why. Need a workaround.
-                    await page.waitForNetworkIdle(timeout);
+                        await page.waitForNetworkIdle();
+
+                    } catch (e){
+                        console.error(`An error occurred during image collection. \nError message:\n${e}\n`);
+                        console.log("Saving temp images and aborting scrape...\n");
+                        break
+                    }
                 }
 
                 //parse and save the data from the images' data URLs.
@@ -216,7 +245,6 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
                 break
 
             case "www.s-manga.net":
-
                 await waitForPageLoad(page,timeout,"#content");
                 //get the thirds of an image to splice together.
                 let pageTest = await page.evaluate(async () => {
@@ -251,7 +279,7 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
         
 
         //opens all the URL links and writes the data to png files. Images are saved in a folder in this directory.
-
+        let shift = 0;
         if(!process.argv[5]){
             directoryname = __dirname + "/images_" + await page.evaluate(() => {
                 return window.location.hostname;
@@ -259,11 +287,16 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
         } else{
             directoryname = __dirname + "/" + process.argv[5];
         }
-
-        let shift = 0;
+        //if directory already exists, make a new directory with a slightly altered name
+        if(fs.existsSync(directoryname)){
+            directoryname += "_0";
+        }
         while(fs.existsSync(directoryname)){
             shift += 1;
-            directoryname = directoryname + "_" + shift;
+            for(let i = 0; i < shift; i++){
+                directoryname += "0";
+            }
+            
         }
         console.log("Creating directory...");
         fs.mkdirSync(directoryname, { recursive: true });
