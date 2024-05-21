@@ -4,11 +4,7 @@ puppeteer.use(StealthPlugin()); //to avoid typical forms of bot detection - but 
 const fs = require("fs");
 const prompt = require("prompt-sync")();
 const randomUA = require("random-useragent");
-
-if(process.argv.length < 3 || process.argv.length > 6){
-    console.log("Usage: node nanoscrape.js [link to chapter] [(optional) timeout] [(optional) headless] [(optional) path]");
-    return
-}
+const { ArgumentParser } = require('argparse');
 
 //works for: 
 //1. Ciao
@@ -18,7 +14,7 @@ if(process.argv.length < 3 || process.argv.length > 6){
 //3. Shounen Jump Plus
 //test link: https://shonenjumpplus.com/episode/3269754496567812827 (Kokoro no Program, Chapter 1)
 
-//working on: Young Jump
+//Next target: Young Jump
 //test link: https://www.s-manga.net/reader/main.php?cid=9784088931678 (some baseball manga i forget the name)
 
 
@@ -77,40 +73,49 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
 
 
 (async () => {
-    // Launch the browser
+    //Argument parsing.
+    const parser = new ArgumentParser({
+        description: 'A simple manga scraper by FortiethAtom4.'
+    });
+    parser.add_argument("link_string");
+    parser.add_argument("-t","--timeout");
+    parser.add_argument("-hl","--headless");
+    parser.add_argument("-d","--directory");
+    parser.add_argument("-r","--retries");
+    args = parser.parse_args();
+
+    // console.log(args["timeout"]);
     let headoption = true;
-    if(process.argv[4] == 'false'){
+    if(args["headless"] == "f" || args["headless"] == "false"){
         headoption = false;
     }
+    // Launch the browser.
     // web security must be disabled in order to download from canvas data URLs.
     const browser = await puppeteer.launch(  { product: 'chrome', args: ['--disable-web-security' ], headless: headoption });
     try {
         console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
         console.log("~~~~~~~~~~NANOSCRAPE~~~~~~~~~~")
         console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
-        console.log("nanoscrape version 5/18/2024.")
+        console.log("nanoscrape version 5/18/2024.");
         //Open a new page
         const page = (await browser.pages())[0];
-        let link = process.argv[2];
+        let link = args["link_string"];
 
         let timeout = 1000;
-        if(process.argv[3]){
-            timeout = process.argv[3];
+        if(args["timeout"]){
+            timeout = args["timeout"];
         }
-
-<<<<<<< HEAD
 
         // will have to do more work here later. Third-party cookie blocking stinks.
         console.log("Setting user agent...");
         await page.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36");
-=======
+
         //Sets a random user agent for the browser session. 
         //This line is necessary to bypass some bot detection protocols.
         let newua = await randomUA.getRandom();
         console.log(`User agent for this session: ${newua}`)
         await page.setUserAgent(newua)
 
->>>>>>> 5f5d5a1b861e90fa7721c673d54ffedd1c57725f
         
         console.log("Waiting for page load...");
         await page.goto(link, {
@@ -176,7 +181,7 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
 
                 issueSrcs = new Set();
                 //Used to limit image collection retries if e.g. no extra chapter exists for scraper to navigate to.
-                let maxRetries = 5;
+                let maxRetries = args["retries"] ? args["retries"] : 5;
                 let curRetries = 0;
                 let prevImgCount = 0;
                 //To be implemented in a future update.
@@ -188,7 +193,7 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
                 page.on('console', (msg) => {console.log(msg.text())}) //for testing only
                 //Gets canvas Data URL links. Because of this algorithm's potential to accidentally grab copies of the same URL
                 //due to the website's dynamic load/offload nature, a Set data object is necessary.
-                while(page.url() == process.argv[2] && curRetries < maxRetries){
+                while(page.url() == args["link_string"] && curRetries < maxRetries){
                     try{
                         let pageChunk = await page.evaluate(() => {
                             let canvases = document.getElementsByTagName("canvas");
@@ -274,18 +279,18 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
                 break
 
             default:
-                throw new Error(`Given URL "${process.argv[2]}" is not a recognized URL for manga scraping.`);
+                throw new Error(`Given URL "${args["link_string"]}" is not a recognized URL for manga scraping.`);
         }
         
 
         //opens all the URL links and writes the data to png files. Images are saved in a folder in this directory.
         let shift = 0;
-        if(!process.argv[5]){
+        if(!args["directory"]){
             directoryname = __dirname + "/images_" + await page.evaluate(() => {
                 return window.location.hostname;
             });
         } else{
-            directoryname = __dirname + "/" + process.argv[5];
+            directoryname = __dirname + "/" + args["directory"];
         }
         //if directory already exists, make a new directory with a slightly altered name
         if(fs.existsSync(directoryname)){

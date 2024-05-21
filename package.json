@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "argparse": "^2.0.1",
     "prompt-sync": "^4.2.0",
     "puppeteer": "^22.6.2",
     "puppeteer-extra": "^3.3.6",

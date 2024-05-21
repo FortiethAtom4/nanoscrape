@@ -34,37 +34,44 @@ on your Internet connection and your computer's resources.
 
 # USAGE
 
-Command: `node nanoscrape.js [URL] [(optional) timeout] [(optional headless)] [(optional) path]`
+Command: `nanoscrape.js [-h] [-t TIMEOUT] [-hl HEADLESS] [-d DIRECTORY] [-r RETRIES] link_string`
 
 # OPTIONS
 
-**timeout** \
+**TIMEOUT** \
 The command waits for the network to be idle before beginning scraping. The default wait time is 1000 milliseconds. You can change this value by adding a number (in milliseconds) to the end of the command. For example, the following will wait for 5000 milliseconds of network idle time instead of 1000 before scraping:
 
-`node nanoscrape.js [URL] 5000`
+`node nanoscrape.js [link_string] -t 5000`
 
 This is done to ensure all images have loaded before scraping begins. If your computer is slow or your internet connection is choppy, consider using a higher timeout time to compensate. To avoid causing bugs during scraping (i.e. missing pages), I highly recommend not using values lower than 1000 milliseconds.
 
-**headless** \
+**HEADLESS** \
 By default, the scraper uses a headless browser to get images; that is, it does not visually render the browser while it operates. You can tell the scraper to render the page it is using by adding "false" at the end of the command line.
-*NOTE:* You must also enter a timeout value when using this command.
 
-Example:
-`node nanoscrape.js [URL] 1000 false`
+Example: `node nanoscrape.js [link_string] -hl false`
 
-**path** \
+**DIRECTORY** \
 By default, the scraper will automatically generate a name for the image folder. You can override this by adding in a custom name for your folder(s) on the command line. The folder generates from the directory nanoscrape.js is in. Subfolders are permitted, e.g. "folder-1/folder-2". The images will be saved in folder-2, within folder-1. 
-*NOTE:* You must also enter a timeout value and a headless value (true or false) when using this command.
 
 Examples: \
-`node nanoscrape.js [URL] 1000 true path/to/my/folder`\
-`note nanoscrape.js [URL] 1000 true "folder name with spaces"`
+`node nanoscrape.js [link_string] -d path/to/my/folder`\
+`note nanoscrape.js [link_string] -d "folder name with spaces"`
+
+**RETRIES** \
+The scraper will occasionally flip a page and not collect any new images. When this happens, the scraper will continue to attempt to get new pages until it hits a maximum retry limit. The default maximum retries is 5, which is more than enough for most scenarios. However, you can change this value if, e.g. your connection to the site is choppy and the scraper tends to miss pages on the first few passes. The following example sets the maximum retry value to 10: \
+
+ `node nanoscrape.js [link_string] -r 10`
+
+ Note: increasing this value will necessarily cause the scraper to make a few extra passes at the end of the chapter, which will slightly increase total scraping time. Additionally, decreasing it risks the scraper closing prematurely and missing pages. I recommend leaving this as the default value unless you believe that changing it is absolutely necessary. 
 
 # ENJOY
 
 IMPORTANT NOTE: There are new rules about third-party cookies which are being rolled out on Chrome browsers in the near future. This will cause some serious problems for nanoscrape. As it is, the scraper still works but occasionally gets bombarded with "third party cookie will be blocked" messages. I'll do what I can to address this issue and hopefully keep the scraper functional after the rule passes.
 
 # PATCH NOTES
+
+5/20/2024
+- Added a proper argument parser, making command-line execution much smoother and simpler. Updated README accordingly.
 
 5/19/2024
 - Relaxed some restrictions on the scraper's waitForNetworkIdle usage, slightly improving scraping speed.
