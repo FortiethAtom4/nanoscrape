@@ -1,8 +1,9 @@
-const puppeteer = require('puppeteer-extra')
-const StealthPlugin = require('puppeteer-extra-plugin-stealth')
-puppeteer.use(StealthPlugin()) //to avoid typical forms of bot detection
+const puppeteer = require('puppeteer-extra');
+const StealthPlugin = require('puppeteer-extra-plugin-stealth');
+puppeteer.use(StealthPlugin()); //to avoid typical forms of bot detection - but not enough for everything
 const fs = require("fs");
 const prompt = require("prompt-sync")();
+const randomUA = require("random-useragent");
 
 if(process.argv.length < 3 || process.argv.length > 6){
     console.log("Usage: node nanoscrape.js [link to chapter] [(optional) timeout] [(optional) headless] [(optional) path]");
@@ -11,7 +12,7 @@ if(process.argv.length < 3 || process.argv.length > 6){
 
 //works for: 
 //1. Ciao
-//test link: https://ciao.shogakukan.co.jp/comics/title/00511/episode/9255 (NekoMeru, Chapter 5)
+//test link: https://ciao.shogakukan.co.jp/comics/title/00511/episode/20257 (NekoMeru, Chapter 6)
 //2. Tonari no Young Jump
 //test link: https://tonarinoyj.jp/episode/4856001361151760115 (Renai Daikou, Chapter 1)
 //3. Shounen Jump Plus
@@ -52,7 +53,6 @@ const parseDataUrl = (dataUrl) => {
 
 let dataSaveFunction;
 let directoryname; //these will be initialized on a successful scrape.
-let prevLength = -1;
 
 async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSelector){
     console.log("This chapter requires a login and rental to scrape.");
@@ -190,39 +190,39 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
                 //due to the website's dynamic load/offload nature, a Set data object is necessary.
                 while(page.url() == process.argv[2] && curRetries < maxRetries){
                     try{
-                    let pageChunk = await page.evaluate(() => {
-                        let canvases = document.getElementsByTagName("canvas");
-
-                        let canvasdata = [];
-                        for(let i = 0; i < canvases.length; i++){
-                            canvasdata.push(canvases[i].toDataURL());
-                        }
-
-                        return canvasdata;
-                        
-                    });
+                        let pageChunk = await page.evaluate(() => {
+                            let canvases = document.getElementsByTagName("canvas");
+    
+                            let canvasdata = [];
+                            for(let i = 0; i < canvases.length; i++){
+                                canvasdata.push(canvases[i].toDataURL());
+                            }
+    
+                            return canvasdata;
+                            
+                        });
                         console.log(`-> Found ${pageChunk.length} images.`)
-                    for(let i = 0; i < pageChunk.length; i++){
-                        issueSrcs.add(pageChunk[i]);
-                    }
+                        for(let i = 0; i < pageChunk.length; i++){
+                            issueSrcs.add(pageChunk[i]);
+                        }
                         //Retry getting new images, end scraping if no new images after 5 iterations.
                         if(Array.from(issueSrcs).length == prevImgCount){
                             curRetries += 1;
                         }
                         prevImgCount = Array.from(issueSrcs).length;
                         console.log(`-> Total unique images: ${Array.from(issueSrcs).length}`);
-                    //simulates clicking forward with a slight pause in between each click.
-                    //this will cause the page to load more images in, which can then be scraped.
+                        //simulates clicking forward with a slight pause in between each click.
+                        //this will cause the page to load more images in, which can then be scraped.
                         console.log("Moving forward a page...");
                         if(await page.$(navigation_selector) !== null){
-                        await page.click(navigation_selector)
-                        .then(() => (sleep(250)))
-                    }
-                    
-                    
+                            await page.click(navigation_selector)
+                            .then(() => (sleep(250)))
+                        }
                         
-
-                    //For some reason, this line bugs the program out after an automated login. No idea why. Need a workaround.
+                        
+                        
+    
+                        //For some reason, this line bugs the program out after an automated login. No idea why. Need a workaround.
                         await page.waitForNetworkIdle();
 
                     } catch (e){
