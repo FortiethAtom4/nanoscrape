@@ -79,7 +79,7 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
     });
     parser.add_argument("link_string",{"help":"URL to the manga chapter."});
     parser.add_argument("-t","--timeout",{"help":"The minimum network idle wait time before the scraper continues (default 1000ms)."});
-    parser.add_argument("-hl","--headless",{"help":"Set this to `false` to render the browser while the scraper operates."});
+    parser.add_argument("-hl","--headless",{"help":"Set this to `f` or `false` to render the browser while the scraper operates."});
     parser.add_argument("-d","--directory",{"help":"Designate a destination for the scraped images. Creates a new directory at the given path if not already available."});
     parser.add_argument("-r","--retries",{"help":"If no new images found, maximum number of retries before scraper closes (default 5)."});
     args = parser.parse_args();
