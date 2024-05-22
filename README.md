@@ -29,8 +29,7 @@ This list will continue to increase; nanoscrape.js is in continuous development 
 
 5. Type the following into the command line: `node nanoscrape.js [URL]`, where `[URL]` is the chapter URL.
 
-6. The scraper will get your images and write them to the "images" folder. This may take some time, depending
-on your Internet connection and your computer's resources.
+6. The scraper will get your images and write them to a local folder (or to a new custom durectory, if you choose). This may take some time, depending on your Internet connection and your computer's resources.
 
 # USAGE
 
