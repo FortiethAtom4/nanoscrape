@@ -16,7 +16,7 @@ Full list of recognized domains:
 This list will continue to increase; nanoscrape.js is in continuous development with the goal to be able to recognize and scrape from as many manga sites as possible.
 
 - Example test links:
-    - from Ciao: https://ciao.shogakukan.co.jp/comics/title/00511/episode/9255 (NekoMeru Chapter 5)
+    - from Ciao: https://ciao.shogakukan.co.jp/comics/title/00511/episode/7781 (NekoMeru Chapter 1)
     - from Young Jump: https://tonarinoyj.jp/episode/4856001361151760115 (Love Agency Chapter 1)
     - from Shounen Young Jump: https://shonenjumpplus.com/episode/3269754496567812827 (Kokoro no Program Chapter 1)
 
