@@ -29,11 +29,11 @@ This list will continue to increase; nanoscrape.js is in continuous development 
 
 5. Type the following into the command line: `node nanoscrape.js [URL]`, where `[URL]` is the chapter URL.
 
-6. The scraper will get your images and write them to a local folder (or to a new custom durectory, if you choose). This may take some time, depending on your Internet connection and your computer's resources.
+6. The scraper will get your images and write them to a local folder (or to a new custom directory, if you choose). This may take some time, depending on your Internet connection and your computer's resources.
 
 # USAGE
 
-Command: `nanoscrape.js [-h] [-t TIMEOUT] [-hl HEADLESS] [-d DIRECTORY] [-r RETRIES] link_string`
+Command: `nanoscrape.js [-h] [-t TIMEOUT] [-hl HEADLESS] [-d DIRECTORY] [-r RETRIES] [-a USERAGENT] link_string`
 
 # OPTIONS
 
@@ -61,13 +61,28 @@ The scraper will occasionally flip a page and not collect any new images. When t
 
  `node nanoscrape.js [link_string] -r 10`
 
- Note: increasing this value will necessarily cause the scraper to make a few extra passes at the end of the chapter, which will slightly increase total scraping time. Additionally, decreasing it risks the scraper closing prematurely and missing pages. I recommend leaving this as the default value unless you believe that changing it is absolutely necessary. 
+ Note: increasing this value will necessarily cause the scraper to make a few extra passes at the end of the chapter, which will slightly increase total scraping time. Additionally, decreasing it risks the scraper closing prematurely and missing pages. I recommend not setting the maximum number of retries below the default value unless you believe it is absolutely necessary. 
+
+**USERAGENT** \
+The scraper uses a random user agent when scraping by default. This is a typical scraper strategy to avoid detection. However, you can choose your own user agent or to use a local default Chrome user agent.
+
+Examples: \
+`node nanoscrape.js [link_string] -a default`
+`node nanoscrape.js [link_string] -a [user_agent_string]`
+
+Note: To avoid being detected and/or blocked, I recommend sticking to random user agents unless you believe that setting this value is absolutely necessary. 
 
 # ENJOY
 
 IMPORTANT NOTE: There are new rules about third-party cookies which are being rolled out on Chrome browsers in the near future. This will cause some serious problems for nanoscrape. As it is, the scraper still works but occasionally gets bombarded with "third party cookie will be blocked" messages. I'll do what I can to address this issue and hopefully keep the scraper functional after the rule passes.
 
 # PATCH NOTES
+
+5/22/2024
+- Added an optional argument to choose a user agent for the scrape session. 
+- Experimental speed optimizations. Tests showed a significant increase in average scrape speed with no misordering or loss of quality.
+    - This is still in testing and may be changed.
+- A potential bugfix for the automated login bug. Tests are still ongoing.
 
 5/21/2024
 - Added a proper argument parser, making command-line execution much smoother and simpler. Updated README accordingly.
@@ -93,7 +108,7 @@ IMPORTANT NOTE: There are new rules about third-party cookies which are being ro
 
 # BUGS
 
-List up to date as of 5/19/2024
-- WARNING: There is a bug with automated logins which causes the scraper to time out after the page loads. Do not use automated logins for pocket.shonenmagazine.com for the time being.
-- There is a bug for some sites where the scraper collects a blank image as the first image for the chapter. This can be annoying because it sets the page indexes off by 1, but is otherwise harmless and will be dealt with after the above bug is fixed.
-- There is a bug at the end of scraping a chapter where the scraper collects 0 new images a few times before saving them. This is caused by pages at the ends of chapters which the scraper already collected but still loops over in case it missed any. This bug is harmless but annoying and will be dealt with in the future.
+List up to date as of 5/22/2024
+- There is a bug with automated logins which causes the scraper to time out after the page loads.
+    - This bug MAY be fixed now, but tests are still ongoing.
+- There is a bug for Ciao chapters where a blank image is scraped and downloaded. For some reason in testing it always seemed to be ordered at the same index. This bug does not affect valid images, and chapters appear to still be successfully scraped, but it disrupts the scraper's page numbering which can be very annoying for long chapters.

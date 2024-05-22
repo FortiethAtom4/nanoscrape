@@ -49,6 +49,7 @@ const parseDataUrl = (dataUrl) => {
 
 let dataSaveFunction;
 let directoryname; //these will be initialized on a successful scrape.
+let d; //will be used to determine scrape duration.
 
 async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSelector){
     console.log("This chapter requires a login and rental to scrape.");
@@ -82,6 +83,7 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
     parser.add_argument("-hl","--headless",{"help":"Set this to `f` or `false` to render the browser while the scraper operates."});
     parser.add_argument("-d","--directory",{"help":"Designate a destination for the scraped images. Creates a new directory at the given path if not already available."});
     parser.add_argument("-r","--retries",{"help":"If no new images found, maximum number of retries before scraper closes (default 5)."});
+    parser.add_argument("-a","--useragent",{"help":"Set the browser's user agent for the scraping session. Type 'random' to set a random agent."});
     args = parser.parse_args();
 
     // console.log(args["timeout"]);
@@ -101,20 +103,19 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
         const page = (await browser.pages())[0];
         let link = args["link_string"];
 
-        let timeout = 1000;
-        if(args["timeout"]){
-            timeout = args["timeout"];
-        }
+        let timeout = args["timeout"] ? args["timeout"] : 1000;
 
         // will have to do more work here later. Third-party cookie blocking stinks.
         console.log("Setting user agent...");
-        await page.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36");
-
-        //Sets a random user agent for the browser session. 
-        //This line is necessary to bypass some bot detection protocols.
-        let newua = await randomUA.getRandom();
-        console.log(`User agent for this session: ${newua}`)
-        await page.setUserAgent(newua)
+        
+        let newua = "";
+        if(args["useragent"]){
+            newua = args["useragent"] == "default" ? "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36" : args["useragent"];
+        } else {
+            newua = await randomUA.getRandom();
+        }
+        console.log(`User agent for this session: ${newua}`);
+        await page.setUserAgent(newua);
 
         
         console.log("Waiting for page load...");
@@ -175,7 +176,8 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
 
 
                 //class of next-page button: "page-navigation-forward rtl js-slide-forward"
-                await waitForPageLoadAlt(page,canvas_selector);
+                await waitForPageLoad(page,timeout,canvas_selector);
+                d = new Date(); //for determining duration of scrape.
                 console.log("This site dynamically loads images. Beginning page click simulation...");
                 console.log("WARNING: this can take some time, depending on chapter length.");
 
@@ -195,7 +197,7 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
                 //due to the website's dynamic load/offload nature, a Set data object is necessary.
                 while(page.url() == args["link_string"] && curRetries < maxRetries){
                     try{
-                        let pageChunk = await page.evaluate(() => {
+                        let pageChunk = await page.evaluate(async () => {
                             let canvases = document.getElementsByTagName("canvas");
     
                             let canvasdata = [];
@@ -206,29 +208,26 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
                             return canvasdata;
                             
                         });
-                        console.log(`-> Found ${pageChunk.length} images.`)
-                        for(let i = 0; i < pageChunk.length; i++){
-                            issueSrcs.add(pageChunk[i]);
+                        let chunklength = await pageChunk.length;
+                        console.log(`-> Found ${chunklength} images.`)
+                        for(let i = 0; i < chunklength; i++){
+                            await issueSrcs.add(pageChunk[i]);
                         }
                         //Retry getting new images, end scraping if no new images after 5 iterations.
-                        if(Array.from(issueSrcs).length == prevImgCount){
+                        let srcslength = await Array.from(issueSrcs).length
+                        if(srcslength == prevImgCount){
                             curRetries += 1;
                         }
-                        prevImgCount = Array.from(issueSrcs).length;
-                        console.log(`-> Total unique images: ${Array.from(issueSrcs).length}`);
-                        //simulates clicking forward with a slight pause in between each click.
-                        //this will cause the page to load more images in, which can then be scraped.
+                        prevImgCount = srcslength;
+                        console.log(`-> Total unique images saved: ${srcslength}`);
+
+                        //simulates clicking forward a page in the chapter.
+                        //this will cause the site to load more images in, which can then be scraped.
                         console.log("Moving forward a page...");
                         if(await page.$(navigation_selector) !== null){
-                            await page.click(navigation_selector)
-                            .then(() => (sleep(250)))
+                            await page.click(navigation_selector);
                         }
                         
-                        
-                        
-    
-                        //For some reason, this line bugs the program out after an automated login. No idea why. Need a workaround.
-                        await page.waitForNetworkIdle();
 
                     } catch (e){
                         console.error(`An error occurred during image collection. \nError message:\n${e}\n`);
@@ -317,6 +316,21 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
         await browser.close();
         if(directoryname){
             console.log(`\n-> Scrape complete. Images have been saved in directory ${directoryname}.`);
+            let endd = new Date() - d; //total time in milliseconds
+            let endgameminutes = Math.trunc(endd/60000);
+            let endgameseconds = Math.trunc((endd % 60000)/1000);
+            //time formatting, adding 0s to make more readable
+            if(endgameseconds < 10){
+                endgameseconds = "0" + endgameseconds;
+            }
+            let endgamemillis = endd % 1000;
+            if(endgamemillis < 100){
+                endgamemillis = "0" + endgamemillis;
+            }
+            if(endgamemillis < 10){
+                endgamemillis = "0" + endgamemillis; //theres got to be a better way to add these 0s
+            }
+            console.log(`Total scrape time: ${endgameminutes}:${endgameseconds}.${endgamemillis}`);
         }
         console.log("\n-> Scraper closed successfully.");
     }
