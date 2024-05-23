@@ -22,6 +22,25 @@ const { ArgumentParser } = require('argparse');
 
 //waits a set amount of network idle time before beginning scraping, default 1 second (1000 milliseconds). 
 //This is to allow the many images to load to the page, which typically takes a bit.
+
+
+//Global variable stuff (cringe)
+let dataSaveFunction; //variable function for the data saving algorithm.
+let directoryname; //these will be initialized on a successful scrape.
+let d; //will be used to determine scrape duration.
+//Argument parsing.
+const parser = new ArgumentParser({
+    description: 'A simple manga scraper by FortiethAtom4.'
+});
+parser.add_argument("link_string",{"help":"URL to the manga chapter."});
+parser.add_argument("-t","--timeout",{"help":"The minimum network idle wait time before the scraper continues (default 1000ms)."});
+parser.add_argument("-hl","--headless",{"help":"Set this to `f` or `false` to render the browser while the scraper operates."});
+parser.add_argument("-d","--directory",{"help":"Designate a destination for the scraped images. Creates a new directory at the given path if not already available."});
+parser.add_argument("-r","--retries",{"help":"If no new images found, maximum number of retries before scraper closes (default 5)."});
+parser.add_argument("-a","--useragent",{"help":"Set the browser's user agent for the scraping session. Type 'random' to set a random agent."});
+args = parser.parse_args();
+
+//helper functions
 async function waitForPageLoad(page,timeout,selector){
     console.log("Waiting for page elements to load...");
     await Promise.all([
@@ -30,11 +49,12 @@ async function waitForPageLoad(page,timeout,selector){
     ]).then(() => (console.log("Page elements loaded, proceeding with scraping...")));
 }
 
-async function waitForPageLoadAlt(page,selector){
-    console.log("Waiting for page elements to load...");
-    await page.waitForSelector(selector).then(() => (console.log("-> Page image elements detected.")))
-    .then(() => (console.log("Page elements loaded, proceeding with scraping...")));
-}
+//alterant page load function (defunct for now)
+// async function waitForPageLoadAlt(page,selector){
+//     console.log("Waiting for page elements to load...");
+//     await page.waitForSelector(selector).then(() => (console.log("-> Page image elements detected.")))
+//     .then(() => (console.log("Page elements loaded, proceeding with scraping...")));
+// }
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
@@ -47,9 +67,7 @@ const parseDataUrl = (dataUrl) => {
     return { mime: matches[1], buffer: Buffer.from(matches[2], 'base64') };
 };
 
-let dataSaveFunction;
-let directoryname; //these will be initialized on a successful scrape.
-let d; //will be used to determine scrape duration.
+
 
 async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSelector){
     console.log("This chapter requires a login and rental to scrape.");
@@ -74,17 +92,7 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
 
 
 (async () => {
-    //Argument parsing.
-    const parser = new ArgumentParser({
-        description: 'A simple manga scraper by FortiethAtom4.'
-    });
-    parser.add_argument("link_string",{"help":"URL to the manga chapter."});
-    parser.add_argument("-t","--timeout",{"help":"The minimum network idle wait time before the scraper continues (default 1000ms)."});
-    parser.add_argument("-hl","--headless",{"help":"Set this to `f` or `false` to render the browser while the scraper operates."});
-    parser.add_argument("-d","--directory",{"help":"Designate a destination for the scraped images. Creates a new directory at the given path if not already available."});
-    parser.add_argument("-r","--retries",{"help":"If no new images found, maximum number of retries before scraper closes (default 5)."});
-    parser.add_argument("-a","--useragent",{"help":"Set the browser's user agent for the scraping session. Type 'random' to set a random agent."});
-    args = parser.parse_args();
+
 
     // console.log(args["timeout"]);
     let headoption = true;
