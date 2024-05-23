@@ -33,16 +33,16 @@ This list will continue to increase; nanoscrape.js is in continuous development 
 
 # USAGE
 
-Command: `nanoscrape.js [-h] [-t TIMEOUT] [-hl HEADLESS] [-d DIRECTORY] [-r RETRIES] [-a USERAGENT] link_string`
+Command: `node nanoscrape.js [-h] [-t TIMEOUT] [-hl HEADLESS] [-d DIRECTORY] [-a USERAGENT] link_string`
 
 # OPTIONS
 
 **TIMEOUT** \
-The command waits for the network to be idle before beginning scraping. The default wait time is 1000 milliseconds. You can change this value by adding a number (in milliseconds) to the end of the command. For example, the following will wait for 5000 milliseconds of network idle time instead of 1000 before scraping:
+The command waits for the network to be idle before beginning scraping. The default wait time is 250 milliseconds. You can change this value by adding a number (in milliseconds) to the end of the command. For example, the following will wait for 5000 milliseconds of network idle time instead of 250 before scraping:
 
 `node nanoscrape.js [link_string] -t 5000`
 
-This is done to ensure all images have loaded before scraping begins. If your computer is slow or your internet connection is choppy, consider using a higher timeout time to compensate. To avoid causing bugs during scraping (i.e. missing pages), I highly recommend not using values lower than 1000 milliseconds.
+This is done to ensure all images have loaded before scraping begins. If your computer is slow or your internet connection is choppy, consider using a higher timeout time to compensate. To avoid causing bugs during scraping (i.e. missing pages), I highly recommend not using values lower than 250 milliseconds.
 
 **HEADLESS** \
 By default, the scraper uses a headless browser to get images; that is, it does not visually render the browser while it operates. You can tell the scraper to render the page it is using by adding "false" at the end of the command line.
@@ -55,13 +55,6 @@ By default, the scraper will automatically generate a name for the image folder.
 Examples: \
 `node nanoscrape.js [link_string] -d path/to/my/folder`\
 `note nanoscrape.js [link_string] -d "folder name with spaces"`
-
-**RETRIES** \
-The scraper will occasionally flip a page and not collect any new images. When this happens, the scraper will continue to attempt to get new pages until it hits a maximum retry limit. The default maximum retries is 5, which is more than enough for most scenarios. However, you can change this value if, e.g. your connection to the site is choppy and the scraper tends to miss pages on the first few passes. The following example sets the maximum retry value to 10: \
-
- `node nanoscrape.js [link_string] -r 10`
-
- Note: increasing this value will necessarily cause the scraper to make a few extra passes at the end of the chapter, which will slightly increase total scraping time. Additionally, decreasing it risks the scraper closing prematurely and missing pages. I recommend not setting the maximum number of retries below the default value unless you believe it is absolutely necessary. 
 
 **USERAGENT** \
 The scraper uses a random user agent when scraping by default. This is a typical scraper strategy to avoid detection. However, you can choose your own user agent or to use a local default Chrome user agent.
@@ -80,9 +73,11 @@ IMPORTANT NOTE: There are new rules about third-party cookies which are being ro
 
 5/22/2024
 - Added an optional argument to choose a user agent for the scrape session. 
-- Experimental speed optimizations. Tests showed a significant increase in average scrape speed with no misordering or loss of quality.
+- Experimental speed optimizations. Tests showed a significant increase in average scrape speed with no loss in quality.
     - This is still in testing and may be changed. See Bugs for more information.
-- A potential bugfix for the automated login bug. Tests are still ongoing.
+- Changed scraper loop to check for total number of pages before scraping, making the scraper less prone to Internet-related issues.
+    - This rendered the RETRIES optional parameter obsolete. It has since been removed.
+- A potential bugfix for the automated login bug has been added. Tests are still ongoing.
 
 5/21/2024
 - Added a proper argument parser, making command-line execution much smoother and simpler. Updated README accordingly.
@@ -110,5 +105,5 @@ IMPORTANT NOTE: There are new rules about third-party cookies which are being ro
 
 List up to date as of 5/22/2024
 - There is a bug with automated logins which causes the scraper to time out after the page loads.
-    - This bug MAY be fixed now, but tests are still ongoing.
-- There is a bug for Ciao chapters where a blank image is scraped and downloaded. For some reason in testing it always seemed to be ordered at the same index. This bug does not affect valid images, and chapters appear to still be successfully scraped, but it disrupts the scraper's page numbering which can be very annoying for long chapters.
+    - This bug MAY be fixed now, but tests are still ongoing. Use with caution.
+- There is a bug for Ciao chapters where an extra blank image is scraped and downloaded. For some reason in testing it always seemed to be ordered at the same index. This bug does not affect valid images, and chapters appear to still be successfully scraped, but it disrupts the scraper's page numbering which can be very annoying for long chapters.

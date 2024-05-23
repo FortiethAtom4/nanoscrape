@@ -5,6 +5,7 @@ const fs = require("fs");
 const prompt = require("prompt-sync")();
 const randomUA = require("random-useragent");
 const { ArgumentParser } = require('argparse');
+const { wrap } = require('module');
 
 //works for: 
 //1. Ciao
@@ -36,7 +37,6 @@ parser.add_argument("link_string",{"help":"URL to the manga chapter."});
 parser.add_argument("-t","--timeout",{"help":"The minimum network idle wait time before the scraper continues (default 1000ms)."});
 parser.add_argument("-hl","--headless",{"help":"Set this to `f` or `false` to render the browser while the scraper operates."});
 parser.add_argument("-d","--directory",{"help":"Designate a destination for the scraped images. Creates a new directory at the given path if not already available."});
-parser.add_argument("-r","--retries",{"help":"If no new images found, maximum number of retries before scraper closes (default 5)."});
 parser.add_argument("-a","--useragent",{"help":"Set the browser's user agent for the scraping session. Type 'random' to set a random agent."});
 args = parser.parse_args();
 
@@ -49,12 +49,12 @@ async function waitForPageLoad(page,timeout,selector){
     ]).then(() => (console.log("Page elements loaded, proceeding with scraping...")));
 }
 
-//alternate page load function (defunct for now)
-// async function waitForPageLoadAlt(page,selector){
-//     console.log("Waiting for page elements to load...");
-//     await page.waitForSelector(selector).then(() => (console.log("-> Page image elements detected.")))
-//     .then(() => (console.log("Page elements loaded, proceeding with scraping...")));
-// }
+
+async function waitForPageLoadAlt(page,selector){
+    console.log("Waiting for page elements to load...");
+    await page.waitForSelector(selector).then(() => (console.log("-> Page image elements detected.")))
+    .then(() => (console.log("Page elements loaded, proceeding with scraping...")));
+}
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
@@ -111,7 +111,7 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
         const page = (await browser.pages())[0];
         let link = args["link_string"];
 
-        let timeout = args["timeout"] ? args["timeout"] : 1000;
+        let timeout = args["timeout"] ? args["timeout"] : 250;
 
         // will have to do more work here later. Third-party cookie blocking stinks.
         console.log("Setting user agent...");
@@ -140,6 +140,7 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
         let issueSrcs = [];
 
         //perform different processes depending on the manga site given:
+        let needsalt = false
         switch(host){
 
             //as of 4/25/2024 all four of my main scraping sites now use the same page load strategy. Weird.
@@ -151,14 +152,16 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
                 //selectors for the dynamic-page load strategy.
                 let canvas_selector;
                 let navigation_selector;
-
+                let page_container;
                 //Selectors for each site. 
                 if(host == "ciao.shogakukan.co.jp"){
                     canvas_selector = ".c-viewer__comic";
                     navigation_selector = ".c-viewer__pager-next";
+                    page_container = ".c-viewer__pages";
                 }else{
                     canvas_selector = ".page-image";
                     navigation_selector = ".page-navigation-forward";
+                    page_container = ".image-container";
                 }
                 
                 //Dialogue to use login information to get to a page.
@@ -181,61 +184,57 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
                 }
 
                 
-
-
                 //class of next-page button: "page-navigation-forward rtl js-slide-forward"
+                // !needsalt ? await waitForPageLoad(page,timeout,canvas_selector) : await waitForPageLoadAlt(page,canvas_selector);
                 await waitForPageLoad(page,timeout,canvas_selector);
-                d = new Date(); //for determining duration of scrape.
-                console.log("This site dynamically loads images. Beginning page click simulation...");
-                console.log("WARNING: this can take some time, depending on chapter length.");
 
-                issueSrcs = new Set();
-                //Used to limit image collection retries if e.g. no extra chapter exists for scraper to navigate to.
-                let maxRetries = args["retries"] ? args["retries"] : 5;
-                let curRetries = 0;
-                let prevImgCount = 0;
-                //To be implemented in a future update.
-                // prevLength = await page.evaluate(() => {
-                //     let numImgs = document.querySelectorAll("p, .page-area");
-                //     return numImgs;
-                // });
-                // console.log(prevLength);
-                page.on('console', (msg) => {console.log(msg.text())}) //for testing only
-                //Gets canvas Data URL links. Because of this algorithm's potential to accidentally grab copies of the same URL
+                d = new Date(); //for determining duration of scrape.
+
+                console.log("This site dynamically loads images. Beginning page click simulation...");
+
+                //Gets canvas Data URL links. Because of this algorithm's potential to grab copies of the same URL
                 //due to the website's dynamic load/offload nature, a Set data object is necessary.
-                while(page.url() == args["link_string"] && curRetries < maxRetries){
+                issueSrcs = new Set();
+
+                page.on('console', (msg) => {console.log(msg.text())}) //for testing
+                
+                //get number of images in the chapter. This includes ads at the beginning/end of the chapter,
+                //which the scraper will skip downloading. But it might flip a few extra pages.
+                let numPages = await page.evaluate(async (page_container) => {
+                    let wrapper = document.querySelector(page_container);
+                    return wrapper.childElementCount;
+                }, page_container);
+
+                //Scrape loop
+                let pgnum = 0;
+                while(pgnum < numPages && page.url() === args["link_string"]){
                     try{
                         
-                        let pageChunk = await page.evaluate(async (canvas_selector) => {
+                        let pageChunk = await page.evaluate(async () => {
                             let canvases = document.getElementsByTagName("canvas");
     
                             let canvasdata = [];
                             for(let i = 0; i < canvases.length; i++){
-                                // console.log(canvases[i].parentElement.className);
                                 canvasdata.push(canvases[i].toDataURL());
                             }
     
                             return canvasdata;
                             
-                        },canvas_selector);
+                        });
                         let chunklength = await pageChunk.length;
                         console.log(`-> Found ${chunklength} images.`)
                         for(let i = 0; i < chunklength; i++){
                             await issueSrcs.add(pageChunk[i]);
                         }
-                        //Retry getting new images, end scraping if no new images after 5 iterations.
                         let srcslength = await Array.from(issueSrcs).length
-                        if(srcslength == prevImgCount){
-                            curRetries += 1;
-                        }
-                        prevImgCount = srcslength;
                         console.log(`-> Total unique images saved: ${srcslength}`);
 
                         //simulates clicking forward a page in the chapter.
                         //this will cause the site to load more images in, which can then be scraped.
                         console.log("Moving forward a page...");
                         if(await page.$(navigation_selector) !== null){
-                            await page.click(navigation_selector);
+                            await page.click(navigation_selector)
+                            .then(() => sleep(timeout));
                         }
                         
 
@@ -244,6 +243,7 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
                         console.log("Saving temp images and aborting scrape...\n");
                         break
                     }
+                    pgnum += 2; //go 2 pages forward each time
                 }
 
                 //parse and save the data from the images' data URLs.
