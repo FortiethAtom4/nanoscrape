@@ -49,7 +49,7 @@ async function waitForPageLoad(page,timeout,selector){
     ]).then(() => (console.log("Page elements loaded, proceeding with scraping...")));
 }
 
-//alterant page load function (defunct for now)
+//alternate page load function (defunct for now)
 // async function waitForPageLoadAlt(page,selector){
 //     console.log("Waiting for page elements to load...");
 //     await page.waitForSelector(selector).then(() => (console.log("-> Page image elements detected.")))
