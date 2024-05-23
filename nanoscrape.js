@@ -203,19 +203,22 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
                 page.on('console', (msg) => {console.log(msg.text())}) //for testing only
                 //Gets canvas Data URL links. Because of this algorithm's potential to accidentally grab copies of the same URL
                 //due to the website's dynamic load/offload nature, a Set data object is necessary.
+                console.log(canvas_selector)
                 while(page.url() == args["link_string"] && curRetries < maxRetries){
                     try{
-                        let pageChunk = await page.evaluate(async () => {
+                        
+                        let pageChunk = await page.evaluate(async (canvas_selector) => {
                             let canvases = document.getElementsByTagName("canvas");
     
                             let canvasdata = [];
                             for(let i = 0; i < canvases.length; i++){
+                                // console.log(canvases[i].parentElement.className);
                                 canvasdata.push(canvases[i].toDataURL());
                             }
     
                             return canvasdata;
                             
-                        });
+                        },canvas_selector);
                         let chunklength = await pageChunk.length;
                         console.log(`-> Found ${chunklength} images.`)
                         for(let i = 0; i < chunklength; i++){

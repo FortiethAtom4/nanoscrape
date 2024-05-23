@@ -81,7 +81,7 @@ IMPORTANT NOTE: There are new rules about third-party cookies which are being ro
 5/22/2024
 - Added an optional argument to choose a user agent for the scrape session. 
 - Experimental speed optimizations. Tests showed a significant increase in average scrape speed with no misordering or loss of quality.
-    - This is still in testing and may be changed.
+    - This is still in testing and may be changed. See Bugs for more information.
 - A potential bugfix for the automated login bug. Tests are still ongoing.
 
 5/21/2024
