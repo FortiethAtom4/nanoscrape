@@ -1,4 +1,4 @@
-@REM gets all of NekoMeru, current as of 6/8/2024.
+@REM gets the first 8 chapters of NekoMeru.
 @REM Total chapters: 8
 @REM Total illustrations: 4
 
