@@ -2,6 +2,7 @@
   "dependencies": {
     "argparse": "^2.0.1",
     "prompt-sync": "^4.2.0",
+    "proxy-chain": "^2.4.0",
     "puppeteer": "^22.6.2",
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2",

@@ -145,6 +145,7 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
             case "tonarinoyj.jp":
             case "shonenjumpplus.com":
             case "pocket.shonenmagazine.com":
+            case "ynjn.jp":
 
                 //selectors for the dynamic-page load strategy.
                 let canvas_selector;
@@ -183,7 +184,7 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
                     "div.setting-inner:nth-child(3) > form:nth-child(1) > div:nth-child(7) > button:nth-child(1)");
 
                 }
-                
+
                 //class of next-page button: "page-navigation-forward rtl js-slide-forward"
                 // !needsalt ? await waitForPageLoad(page,timeout,canvas_selector) : await waitForPageLoadAlt(page,canvas_selector);
                 //this stinks but it works for now.

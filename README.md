@@ -38,11 +38,11 @@ Command: `node nanoscrape.js [-h] [-t TIMEOUT] [-hl HEADLESS] [-d DIRECTORY] [-a
 # OPTIONS
 
 **TIMEOUT** \
-The command waits for the network to be idle before beginning scraping. The default wait time is 250 milliseconds. You can change this value by adding a number (in milliseconds) to the end of the command. For example, the following will wait for 5000 milliseconds of network idle time instead of 250 before scraping:
+The command waits for the network to be idle before beginning scraping. The default wait time is 1000 milliseconds. You can change this value by adding a number (in milliseconds) to the end of the command. For example, the following will wait for 5000 milliseconds of network idle time instead of 1000 before scraping:
 
 `node nanoscrape.js [link_string] -t 5000`
 
-This is done to ensure all images have loaded before scraping begins. If your computer is slow or your internet connection is choppy, consider using a higher timeout time to compensate. To avoid causing bugs during scraping (i.e. missing pages), I highly recommend not using values lower than 250 milliseconds.
+This is done to ensure all images have loaded before scraping begins. If your computer is slow or your internet connection is choppy, consider using a higher timeout time to compensate. To avoid causing bugs during scraping (i.e. missing pages), I highly recommend not using values lower than 1000 milliseconds.
 
 **HEADLESS** \
 By default, the scraper uses a headless browser to get images; that is, it does not visually render the browser while it operates. You can tell the scraper to render the page it is using by adding "false" at the end of the command line.
@@ -64,6 +64,15 @@ Examples: \
 `node nanoscrape.js [link_string] -a [user_agent_string]`
 
 Note: To avoid being detected and/or blocked, I recommend sticking to random user agents unless you believe that setting this value is absolutely necessary. 
+
+# TROUBLESHOOTING
+
+Occasionally, errors will occur while scraping. This can happen for a variety of reasons. Web browsers and protocols are incredibly complex, and it is inevitable that something goes awry. Here are a few common errors that occur while scraping, along with with some simple solutions:
+1. The scraper says "Network idle timeout reached," hangs for a bit, then times out and closes without scraping anything.
+    Likely Problem: The website took an unusually long time to load. This is bound to happen, especially if you are based somewhere far from Japan where most of these sites are hosted. 
+    Solution: Set the 'timeout' value of the scraper to a higher value using the `-t` optional parameter. 
+    Example: `node nanoscrape.js [link_string] -t 2000`
+
 
 # ENJOY
 
