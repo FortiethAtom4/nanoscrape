@@ -5,7 +5,6 @@ const fs = require("fs");
 const prompt = require("prompt-sync")();
 const randomUA = require("random-useragent");
 const { ArgumentParser } = require('argparse');
-const { wrap } = require('module');
 
 //works for: 
 //1. Ciao
@@ -15,8 +14,12 @@ const { wrap } = require('module');
 //3. Shounen Jump Plus
 //test link: https://shonenjumpplus.com/episode/3269754496567812827 (Kokoro no Program, Chapter 1)
 
+// https://tonarinoyj.jp/episode/2550689798395684658 << Kowloon 86 but wrong site
+
+// TODO: get Kowloon from ch70 onwards
+
 //Next target: Young Jump
-//test link: https://www.s-manga.net/reader/main.php?cid=9784088931678 (some baseball manga i forget the name)
+//test link: https://ynjn.jp/viewer/9862/233469 (Love Agency chapter 38)
 
 
 //TODO: Load a dummy session on each site. Get cookies related to the site and save them. Use those cookies for future scrape attempts.
@@ -24,6 +27,7 @@ const { wrap } = require('module');
 //waits a set amount of network idle time before beginning scraping, default 1 second (1000 milliseconds). 
 //This is to allow the many images to load to the page, which typically takes a bit.
 
+//if you can't scrape it, https://rawkuma.com/
 
 //Global variable stuff (cringe)
 let dataSaveFunction; //variable function for the data saving algorithm.
@@ -35,7 +39,7 @@ const parser = new ArgumentParser({
 });
 parser.add_argument("link_string",{"help":"URL to the manga chapter."});
 parser.add_argument("-t","--timeout",{"help":"The minimum network idle wait time before the scraper continues (default 1000ms)."});
-parser.add_argument("-hl","--headless",{"help":"Set this to `f` or `false` to render the browser while the scraper operates."});
+parser.add_argument("-head","--headrender",{"help":"Render the browser while the scraper operates.",action: "store_false"});
 parser.add_argument("-d","--directory",{"help":"Designate a destination for the scraped images. Creates a new directory at the given path if not already available."});
 parser.add_argument("-a","--useragent",{"help":"Set the browser's user agent for the scraping session. Type 'random' to set a random agent."});
 args = parser.parse_args();
@@ -60,14 +64,12 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 // method from https://intoli.com/blog/saving-images/
 const parseDataUrl = (dataUrl) => {
-    const matches = dataUrl.match(/^data:(.+);base64,(.+)$/);
+    const matches = dataUrl.match(/^data:(.*);base64,(.+)$/);
     if (matches.length !== 3) {
       throw new Error('Could not parse data URL.');
     }
     return { mime: matches[1], buffer: Buffer.from(matches[2], 'base64') };
 };
-
-
 
 async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSelector){
     console.log("This chapter requires a login and rental to scrape.");
@@ -95,13 +97,9 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
 
 
     // console.log(args["timeout"]);
-    let headoption = true;
-    if(args["headless"] == "f" || args["headless"] == "false"){
-        headoption = false;
-    }
     // Launch the browser.
     // web security must be disabled in order to download from canvas data URLs.
-    const browser = await puppeteer.launch(  { product: 'chrome', args: ['--disable-web-security' ], headless: headoption });
+    const browser = await puppeteer.launch(  { product: 'chrome', args: ['--disable-web-security' ], headless: args["headrender"] });
     try {
         console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
         console.log("~~~~~~~~~~NANOSCRAPE~~~~~~~~~~")
@@ -111,7 +109,7 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
         const page = (await browser.pages())[0];
         let link = args["link_string"];
 
-        let timeout = args["timeout"] ? args["timeout"] : 250;
+        let timeout = args["timeout"] ? args["timeout"] : 1000;
 
         // will have to do more work here later. Third-party cookie blocking stinks.
         console.log("Setting user agent...");
@@ -140,10 +138,9 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
         let issueSrcs = [];
 
         //perform different processes depending on the manga site given:
-        let needsalt = false
         switch(host){
 
-            //as of 4/25/2024 all four of my main scraping sites now use the same page load strategy. Weird.
+            //as of 5/29/2024 all five of my main scraping sites use the same page load strategy. Weird.
             case "ciao.shogakukan.co.jp":
             case "tonarinoyj.jp":
             case "shonenjumpplus.com":
@@ -158,7 +155,11 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
                     canvas_selector = ".c-viewer__comic";
                     navigation_selector = ".c-viewer__pager-next";
                     page_container = ".c-viewer__pages";
-                }else{
+                }else if (host == "ynjn.jp"){
+                    canvas_selector = "canvas";
+                    navigation_selector = "#viewercomic-main-left";
+                    page_container = ".swiper-wrapper";
+                } else{
                     canvas_selector = ".page-image";
                     navigation_selector = ".page-navigation-forward";
                     page_container = ".image-container";
@@ -182,11 +183,11 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
                     "div.setting-inner:nth-child(3) > form:nth-child(1) > div:nth-child(7) > button:nth-child(1)");
 
                 }
-
                 
                 //class of next-page button: "page-navigation-forward rtl js-slide-forward"
                 // !needsalt ? await waitForPageLoad(page,timeout,canvas_selector) : await waitForPageLoadAlt(page,canvas_selector);
-                await waitForPageLoad(page,timeout,canvas_selector);
+                //this stinks but it works for now.
+                host == "tonarinoyj.jp" ? await waitForPageLoadAlt(page,canvas_selector) : await waitForPageLoad(page,timeout,canvas_selector) ;
 
                 d = new Date(); //for determining duration of scrape.
 
@@ -209,18 +210,18 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
                 let pgnum = 0;
                 while(pgnum < numPages && page.url() === args["link_string"]){
                     try{
-                        
                         let pageChunk = await page.evaluate(async () => {
                             let canvases = document.getElementsByTagName("canvas");
     
                             let canvasdata = [];
                             for(let i = 0; i < canvases.length; i++){
-                                canvasdata.push(canvases[i].toDataURL());
+                                canvasdata.push(await canvases[i].toDataURL());
                             }
     
                             return canvasdata;
                             
                         });
+                        // console.log(Array.from(pageChunk)[1]) - yeah. don't print that.
                         let chunklength = await pageChunk.length;
                         console.log(`-> Found ${chunklength} images.`)
                         for(let i = 0; i < chunklength; i++){
@@ -232,9 +233,10 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
                         //simulates clicking forward a page in the chapter.
                         //this will cause the site to load more images in, which can then be scraped.
                         console.log("Moving forward a page...");
-                        if(await page.$(navigation_selector) !== null){
-                            await page.click(navigation_selector)
-                            .then(() => sleep(timeout));
+                        console.log((await browser.pages()).length)
+                        if(await page.$(navigation_selector) !== null && (await browser.pages()).length == 1){
+                            await page.locator(navigation_selector).click()
+                            .then(() => (sleep(250)));
                         }
                         
 
@@ -247,6 +249,7 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
                 }
 
                 //parse and save the data from the images' data URLs.
+                // dataURLtoFile(dataurl, filename)
                 dataSaveFunction = (directoryname) => {
                     issueSrcs = Array.from(issueSrcs);
                     for (let i = 0; i < issueSrcs.length; i++) {
