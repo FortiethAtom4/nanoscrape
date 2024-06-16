@@ -11,31 +11,33 @@ const { wrap } = require('module');
 //1. Ciao
 //test link: https://ciao.shogakukan.co.jp/comics/title/00511/episode/20257 (NekoMeru, Chapter 6)
 //2. Tonari no Young Jump
-//test link: https://tonarinoyj.jp/episode/4856001361151760115 (Renai Daikou, Chapter 1)
+//test link: https://tonarinoyj.jp/episode/4856001361151760115 (Renai Daikou, Chapter 1 CANCELLED!?)
 //3. Shounen Jump Plus
 //test link: https://shonenjumpplus.com/episode/3269754496567812827 (Kokoro no Program, Chapter 1)
 
 //Next target: Young Jump
+
+
+
+//another thing i want to try later
 //test link: https://www.s-manga.net/reader/main.php?cid=9784088931678 (some baseball manga i forget the name)
 
 
 //TODO: Load a dummy session on each site. Get cookies related to the site and save them. Use those cookies for future scrape attempts.
 
-//waits a set amount of network idle time before beginning scraping, default 1 second (1000 milliseconds). 
-//This is to allow the many images to load to the page, which typically takes a bit.
-
 
 //Global variable stuff (cringe)
 let dataSaveFunction; //variable function for the data saving algorithm.
-let directoryname; //these will be initialized on a successful scrape.
+let directoryname = ""; //these will be initialized on a successful scrape.
 let d; //will be used to determine scrape duration.
+
 //Argument parsing.
 const parser = new ArgumentParser({
     description: 'A simple manga scraper by FortiethAtom4.'
 });
 parser.add_argument("link_string",{"help":"URL to the manga chapter."});
 parser.add_argument("-t","--timeout",{"help":"The minimum network idle wait time before the scraper continues (default 1000ms)."});
-parser.add_argument("-hl","--headless",{"help":"Set this to `f` or `false` to render the browser while the scraper operates."});
+parser.add_argument("-hf","--headful",{"help":"Renders the browser while the scraper operates when this flag is used.","action":"store_false"});
 parser.add_argument("-d","--directory",{"help":"Designate a destination for the scraped images. Creates a new directory at the given path if not already available."});
 parser.add_argument("-a","--useragent",{"help":"Set the browser's user agent for the scraping session. Type 'random' to set a random agent."});
 args = parser.parse_args();
@@ -93,15 +95,9 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
 
 (async () => {
 
-
-    // console.log(args["timeout"]);
-    let headoption = true;
-    if(args["headless"] == "f" || args["headless"] == "false"){
-        headoption = false;
-    }
     // Launch the browser.
     // web security must be disabled in order to download from canvas data URLs.
-    const browser = await puppeteer.launch(  { product: 'chrome', args: ['--disable-web-security' ], headless: headoption });
+    const browser = await puppeteer.launch(  { product: 'chrome', args: ['--disable-web-security' ], headless: args["headful"] });
     try {
         console.log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
         console.log("~~~~~~~~~~NANOSCRAPE~~~~~~~~~~")
