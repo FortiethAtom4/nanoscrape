@@ -1,6 +1,7 @@
 @REM gets all of NekoMeru, current as of 6/8/2024.
 @REM Total chapters: 8
 @REM Total illustrations: 4
+@REM This no longer works as of 6/15/24. Some chapters are locked behind login.
 
 node nanoscrape.js https://ciao.shogakukan.co.jp/comics/title/00511/episode/7781 -d scrapes/nekomeru/ch1
 node nanoscrape.js https://ciao.shogakukan.co.jp/comics/title/00511/episode/8643 -d scrapes/nekomeru/ch2

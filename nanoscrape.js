@@ -10,7 +10,7 @@ const { ArgumentParser } = require('argparse');
 //1. Ciao
 //test link: https://ciao.shogakukan.co.jp/comics/title/00511/episode/20257 (NekoMeru, Chapter 6)
 //2. Tonari no Young Jump
-//test link: https://tonarinoyj.jp/episode/4856001361151760115 (Renai Daikou, Chapter 1 CANCELLED!?)
+//test link: https://tonarinoyj.jp/episode/4856001361151760115 (Renai Daikou, Chapter 1 (CANCELLED!?))
 //3. Shounen Jump Plus
 //test link: https://shonenjumpplus.com/episode/3269754496567812827 (Kokoro no Program, Chapter 1)
 
@@ -187,7 +187,7 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
                 //class of next-page button: "page-navigation-forward rtl js-slide-forward"
                 // !needsalt ? await waitForPageLoad(page,timeout,canvas_selector) : await waitForPageLoadAlt(page,canvas_selector);
                 //this stinks but it works for now.
-                host == "tonarinoyj.jp" ? await waitForPageLoadAlt(page,canvas_selector) : await waitForPageLoad(page,timeout,canvas_selector) ;
+                host == "tonarinoyj.jp" || host == "shonenjumpplus.com" ? await waitForPageLoadAlt(page,canvas_selector) : await waitForPageLoad(page,timeout,canvas_selector) ;
 
                 d = new Date(); //for determining duration of scrape.
 
@@ -233,7 +233,7 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
                         //simulates clicking forward a page in the chapter.
                         //this will cause the site to load more images in, which can then be scraped.
                         console.log("Moving forward a page...");
-                        console.log((await browser.pages()).length)
+                        // console.log((await browser.pages()).length)
                         if(await page.$(navigation_selector) !== null && (await browser.pages()).length == 1){
                             await page.locator(navigation_selector).click()
                             .then(() => (sleep(250)));

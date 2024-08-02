@@ -67,12 +67,16 @@ Note: To avoid being detected and/or blocked, I recommend sticking to random use
 
 # TROUBLESHOOTING
 
-Occasionally, errors will occur while scraping. This can happen for a variety of reasons. Web browsers and protocols are incredibly complex, and it is inevitable that something goes awry. Here are a few common errors that occur while scraping, along with with some simple solutions:
+Occasionally, errors will occur while scraping. This can happen for a variety of reasons. Web browsers and protocols are incredibly complex, and it is inevitable that something goes awry. Here I will list common errors that occur while scraping, along with with some simple solutions:
 1. The scraper says "Network idle timeout reached," hangs for a bit, then times out and closes without scraping anything.
     Likely Problem: The website took an unusually long time to load. This is bound to happen, especially if you are based somewhere far from Japan where most of these sites are hosted. 
     Solution: Set the 'timeout' value of the scraper to a higher value using the `-t` optional parameter. 
     Example: `node nanoscrape.js [link_string] -t 2000`
 
+2. The scraper gets 0 images. When the browser is rendered, it flies through the chapter extremely fast and doesn't download anything.
+    Possible Problem: User agent mismatch. Normally this does not cause problems at all, but on some sites and with some agents it bugs the download out.
+    Solution: Set the user-agent to "default" for the session.
+    Example: `node nanoscrape.js [link_string] -a default`
 
 # ENJOY
 
