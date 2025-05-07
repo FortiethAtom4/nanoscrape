@@ -5,6 +5,7 @@ const fs = require("fs");
 const prompt = require("prompt-sync")();
 const randomUA = require("random-useragent");
 const { ArgumentParser } = require('argparse');
+const { log } = require('console');
 
 //works for: 
 //1. Ciao
@@ -207,8 +208,11 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
                 }, page_container);
 
                 //Scrape loop
+                console.log(numPages);
+                
                 let pgnum = 0;
                 while(pgnum < numPages && page.url() === args["link_string"]){
+                    console.log(pgnum)
                     try{
                         let pageChunk = await page.evaluate(async () => {
                             let canvases = document.getElementsByTagName("canvas");
@@ -236,7 +240,7 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
                         // console.log((await browser.pages()).length)
                         if(await page.$(navigation_selector) !== null && (await browser.pages()).length == 1){
                             await page.locator(navigation_selector).click()
-                            .then(() => (sleep(250)));
+                            .then(() => (sleep(500)));
                         }
                         
 
@@ -245,7 +249,7 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
                         console.log("Saving temp images and aborting scrape...\n");
                         break
                     }
-                    pgnum += 2; //go 2 pages forward each time
+                    pgnum += 1; //go 2 pages forward each time
                 }
 
                 //parse and save the data from the images' data URLs.
@@ -260,16 +264,17 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
                     }
                 };
                 break
-
+            
+            // Skeleton of this one is here but not yet functional.
             case "www.s-manga.net":
                 await waitForPageLoad(page,timeout,"#content");
                 //get the thirds of an image to splice together.
                 let pageTest = await page.evaluate(async () => {
-                    let retarr = []; //not intentional.
-                    retarr.push(document.querySelector("#content-p1 > div:nth-child(1) > div:nth-child(1) > img:nth-child(1)"));
-                    retarr.push(document.querySelector("#content-p1 > div:nth-child(1) > div:nth-child(2) > img:nth-child(1)"));
-                    retarr.push(document.querySelector("#content-p1 > div:nth-child(1) > div:nth-child(3) > img:nth-child(1)"));
-                    return retarr; 
+                    let imageParts = [];
+                    imageParts.push(document.querySelector("#content-p1 > div:nth-child(1) > div:nth-child(1) > img:nth-child(1)"));
+                    imageParts.push(document.querySelector("#content-p1 > div:nth-child(1) > div:nth-child(2) > img:nth-child(1)"));
+                    imageParts.push(document.querySelector("#content-p1 > div:nth-child(1) > div:nth-child(3) > img:nth-child(1)"));
+                    return imageParts; 
                 });
                 console.log("-> Page acquired.")
                 console.log(pageTest[0]);
