@@ -17,20 +17,14 @@ const { log } = require('console');
 
 // https://tonarinoyj.jp/episode/2550689798395684658 << Kowloon 86 but wrong site
 
-// TODO: get Kowloon from ch70 onwards
-
-//Next target: Young Jump
-
-
-
-//another thing i want to try later
-//test link: https://www.s-manga.net/reader/main.php?cid=9784088931678 (some baseball manga i forget the name)
+//another thing I want to try later
+//test link: https://www.s-manga.net/reader/main.php?cid=9784088931678
 
 
 //TODO: Load a dummy session on each site. Get cookies related to the site and save them. Use those cookies for future scrape attempts.
 
 
-//Global variable stuff (cringe)
+//Global variables
 let dataSaveFunction; //variable function for the data saving algorithm.
 let directoryname = ""; //these will be initialized on a successful scrape.
 let d; //will be used to determine scrape duration.
@@ -87,11 +81,6 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
     ])
     
     console.log("Credentials entered.");
-    // while(await page.$(".js-login-error-message") != null) {
-    //     console.log("Login failed, please try again.")
-    //     await doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSelector);
-    // }
-
 }
 
 
@@ -185,8 +174,6 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
 
                 }
 
-                //class of next-page button: "page-navigation-forward rtl js-slide-forward"
-                // !needsalt ? await waitForPageLoad(page,timeout,canvas_selector) : await waitForPageLoadAlt(page,canvas_selector);
                 //this stinks but it works for now.
                 host == "tonarinoyj.jp" || host == "shonenjumpplus.com" ? await waitForPageLoadAlt(page,canvas_selector) : await waitForPageLoad(page,timeout,canvas_selector) ;
 
@@ -198,7 +185,7 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
                 //due to the website's dynamic load/offload nature, a Set data object is necessary.
                 issueSrcs = new Set();
 
-                page.on('console', (msg) => {console.log(msg.text())}) //for testing
+                // page.on('console', (msg) => {console.log(msg.text())}) //for testing
                 
                 //get number of images in the chapter. This includes ads at the beginning/end of the chapter,
                 //which the scraper will skip downloading. But it might flip a few extra pages.
@@ -225,7 +212,6 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
                             return canvasdata;
                             
                         });
-                        // console.log(Array.from(pageChunk)[1]) - yeah. don't print that.
                         let chunklength = await pageChunk.length;
                         console.log(`-> Found ${chunklength} images.`)
                         for(let i = 0; i < chunklength; i++){
@@ -237,7 +223,7 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
                         //simulates clicking forward a page in the chapter.
                         //this will cause the site to load more images in, which can then be scraped.
                         console.log("Moving forward a page...");
-                        // console.log((await browser.pages()).length)
+
                         if(await page.$(navigation_selector) !== null && (await browser.pages()).length == 1){
                             await page.locator(navigation_selector).click()
                             .then(() => (sleep(500)));
@@ -346,7 +332,7 @@ async function doLogin(page,buttonSelector,userSelector,pwSelector,enterInfoSele
                 endgamemillis = "0" + endgamemillis;
             }
             if(endgamemillis < 10){
-                endgamemillis = "0" + endgamemillis; //theres got to be a better way to add these 0s
+                endgamemillis = "0" + endgamemillis;
             }
             console.log(`Total scrape time: ${endgameminutes}:${endgameseconds}.${endgamemillis}`);
         }
